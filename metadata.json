@@ -1,0 +1,5 @@
+{
+  "name": "HanTao",
+  "description": "An intuitive bill splitting application designed to calculate shared costs, service charges, and VAT accurately for groups.",
+  "requestFramePermissions": []
+}
