@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calculator, Users, Receipt, ArrowRight, Sparkles, HelpCircle, Beaker, Sun, Moon } from 'lucide-react';
+import { Calculator, Users, Receipt, ArrowRight, Sparkles, HelpCircle, Beaker, Sun, Moon, Percent, Split, Coins } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -39,9 +39,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center space-y-8 animate-fade-in-up">
         
-        {/* Logo Section */}
-        <div className="bg-white/20 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/30 mb-2">
-            <Calculator size={64} className="text-white drop-shadow-md" />
+        {/* Logo Section - NEW DESIGN */}
+        <div className="relative mb-4">
+            {/* Main App Icon Shape */}
+            <div className="bg-white dark:bg-slate-800 p-7 rounded-[2.5rem] shadow-2xl shadow-teal-900/40 transform -rotate-3 border-[6px] border-white/20 backdrop-blur-sm relative z-10">
+                <Receipt size={64} className="text-teal-600 dark:text-teal-400" strokeWidth={2} />
+            </div>
+            
+            {/* Floating Badge (Users/Split) */}
+            <div className="absolute -bottom-4 -right-4 bg-emerald-500 text-white p-3.5 rounded-2xl shadow-lg border-4 border-emerald-600/30 transform rotate-6 z-20">
+                <Users size={28} strokeWidth={2.5} />
+            </div>
+
+            {/* Decorative Sparkle */}
+            <div className="absolute -top-6 -right-6 text-yellow-300 animate-pulse z-0 opacity-80">
+                <Sparkles size={40} />
+            </div>
         </div>
         
         <div>
@@ -92,34 +105,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <HelpCircle size={16} />
                 วิธีใช้งาน
             </button>
-
-            {/* Restored Demo Button */}
-            <button 
-                onClick={onLoadDemo}
-                className="text-[10px] text-white/40 hover:text-white/80 transition-colors uppercase tracking-widest font-bold border border-white/10 hover:border-white/30 px-4 py-2 rounded-full"
-            >
-                [DEV] โหลดข้อมูลตัวอย่าง
-            </button>
         </div>
 
         {/* Footer Features */}
         <div className="grid grid-cols-3 gap-4 w-full pt-8 border-t border-white/10">
-            <div className="flex flex-col items-center gap-2 text-teal-100/80">
-                <Receipt size={20} />
-                <span className="text-[10px]">แม่นยำ</span>
+            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
+                <Receipt size={22} strokeWidth={2.5} />
+                <span className="text-[10px] font-bold">คำนวณเป๊ะ</span>
             </div>
-            <div className="flex flex-col items-center gap-2 text-teal-100/80">
-                <Users size={20} />
-                <span className="text-[10px]">ไม่จำกัดคน</span>
+            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
+                <Users size={22} strokeWidth={2.5} />
+                <span className="text-[10px] font-bold">หารได้ยกแก๊ง</span>
             </div>
-            <div className="flex flex-col items-center gap-2 text-teal-100/80">
-                <div className="font-bold text-lg leading-none">VAT</div>
-                <span className="text-[10px]">รองรับภาษี</span>
+            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
+                <Percent size={22} strokeWidth={2.5} />
+                <span className="text-[10px] font-bold">รองรับ VAT & SC</span>
             </div>
         </div>
 
-        <div className="text-[10px] text-teal-200/50 mt-4">
-            v1.3.0 • AI Powered
+        <div className="text-[10px] text-teal-200/50 mt-4 tracking-wide font-medium">
+            v1.3.0 • Crafted by HanTao Team
         </div>
       </div>
     </div>
