@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calculator, ChevronRight, HelpCircle, FileText, PenLine, ArrowLeft, Sun, Moon } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -73,7 +74,11 @@ const App: React.FC = () => {
   }, [history]);
 
   const handleStart = () => setView('wizard');
-  const handleFinishWizard = () => setView('calculator');
+  const handleFinishWizard = () => {
+    setView('calculator');
+    // Important: Scroll to top to ensure user sees the main content, not stuck at bottom
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
 
   const handleSaveToHistory = () => {
     const { summaries } = calculateSummary(members, items, receipts, config);
@@ -408,8 +413,8 @@ const App: React.FC = () => {
 
       <main className="max-w-2xl mx-auto p-4 space-y-6 mt-2">
         <section className="animate-fade-in-up"><div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 flex items-center gap-3 transition-colors"><div className="bg-orange-100 dark:bg-orange-900/30 p-2.5 rounded-xl text-orange-600 dark:text-orange-400 shadow-sm"><FileText size={22} /></div><div className="flex-1 relative group"><label className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider block mb-0.5">ชื่อบิล</label><input type="text" value={billName} onChange={(e) => setBillName(e.target.value)} className="w-full font-bold text-gray-800 dark:text-white text-lg bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-slate-700 focus:border-teal-500 focus:outline-none py-0.5 transition-all" placeholder="ตั้งชื่อบิล..." /></div></div></section>
-        <section className="animate-fade-in-up"><MemberSection members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} /></section>
-        <section className="animate-fade-in-up"><ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={onUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} onUpdateItemAdjustments={handleUpdateItemAdjustments} /></section>
+        <section className="animate-fade-in-up"><MemberSection members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} onUpdatePayerPromptPay={handleUpdatePayerPromptPay} /></section>
+        <section className="animate-fade-in-up"><ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={handleUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} onUpdateItemAdjustments={handleUpdateItemAdjustments} /></section>
         <section id="summary-section" className="animate-fade-in-up"><SummarySection members={members} items={items} receipts={receipts} config={config} setConfig={setConfig} billName={billName} onViewTable={() => setShowTable(true)} onUpdatePromptPay={handleUpdatePayerPromptPay} onSaveHistory={handleSaveToHistory} /></section>
       </main>
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />

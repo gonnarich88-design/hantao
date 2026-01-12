@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
-import { Plus, User, X, CreditCard } from 'lucide-react';
+import { Plus, User, X, CreditCard, Wallet, QrCode } from 'lucide-react';
 import { Member } from '../types';
 
 interface MemberSectionProps {
   members: Member[];
   onAddMember: (name: string, promptPay?: string) => void;
   onRemoveMember: (id: string) => void;
+  onUpdatePayerPromptPay?: (promptPayId: string) => void;
   compact?: boolean; 
 }
 
@@ -13,6 +15,7 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
   members,
   onAddMember,
   onRemoveMember,
+  onUpdatePayerPromptPay,
   compact = false,
 }) => {
   const [name, setName] = useState('');
@@ -25,6 +28,8 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
       setPromptPay('');
     }
   };
+
+  const payer = members.find(m => m.isPayer);
 
   const wrapperClasses = compact 
     ? "bg-transparent w-full max-w-md mx-auto" 
@@ -50,6 +55,7 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
                     onChange={(e) => setName(e.target.value)}
                     placeholder="ชื่อเพื่อน (เช่น นัท, บีม)..."
                     className="flex-1 py-3.5 text-base bg-transparent focus:outline-none placeholder:text-gray-300 dark:placeholder:slate-600 text-slate-900 dark:text-white"
+                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                 />
             </div>
             
@@ -111,6 +117,28 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
           </div>
         )}
       </div>
+
+      {payer && onUpdatePayerPromptPay && (
+        <div className={`mt-5 pt-4 border-t border-dashed border-gray-200 dark:border-slate-800/50 ${compact ? 'mx-2' : ''}`}>
+            <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                   <QrCode size={12} className="text-teal-500" /> ช่องทางรับเงินของ {payer.name} (คนจ่ายหลัก)
+                </label>
+                <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-600 group-focus-within:text-teal-500 transition-colors">
+                        <Wallet size={16} />
+                    </div>
+                    <input 
+                        type="text"
+                        value={payer.promptPayId || ''}
+                        onChange={(e) => onUpdatePayerPromptPay(e.target.value)}
+                        placeholder="เบอร์พร้อมเพย์ / เลขบัญชีธนาคาร"
+                        className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 text-sm text-slate-700 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all font-medium"
+                    />
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
