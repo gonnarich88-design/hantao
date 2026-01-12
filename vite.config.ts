@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    // Connect VITE_GOOGLE_AI_KEY from environment to process.env.API_KEY in the app
+    // This allows using process.env.API_KEY in the code.
+    // We map it to VITE_GOOGLE_AI_KEY from your Easypanel setup.
     define: {
       'process.env.API_KEY': JSON.stringify(env.VITE_GOOGLE_AI_KEY || env.API_KEY)
     },
@@ -22,3 +23,4 @@ export default defineConfig(({ mode }) => {
     }
   }
 })
+    
