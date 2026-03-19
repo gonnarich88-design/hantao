@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Calculator, ChevronRight, HelpCircle, FileText, PenLine, ArrowLeft, Sun, Moon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calculator, ChevronRight, HelpCircle, FileText, PenLine, ArrowLeft, Sun, Moon, LogIn, LogOut, History } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { MemberSection } from './components/MemberSection';
 import { ItemSection } from './components/ItemSection';
@@ -10,13 +10,23 @@ import { TableSummary } from './components/TableSummary';
 import { LandingPage } from './components/LandingPage';
 import { HistoryView } from './components/HistoryView';
 import { ManualWizard } from './components/ManualWizard';
+import { AuthView } from './components/AuthView';
 import { Member, Item, BillConfig, SavedBill, Receipt } from './types';
 import { calculateSummary, formatCurrency } from './utils/calculations';
+import { useAuth } from './context/AuthContext';
+import { fetchBillHistory, saveBillToCloud, saveAllBillsToCloud, deleteBillFromCloud } from './lib/billHistory';
+import { getProfile } from './lib/profile';
+import { fetchSavedGroups, createSavedGroup, type SavedGroupRow } from './lib/savedGroups';
+import { ProfileModal } from './components/ProfileModal';
+import { SaveGroupModal } from './components/SaveGroupModal';
 
-type AppView = 'landing' | 'calculator' | 'history' | 'wizard';
+type AppView = 'landing' | 'calculator' | 'history' | 'wizard' | 'auth';
 
 const App: React.FC = () => {
+  const auth = useAuth();
   const [view, setView] = useState<AppView>('landing');
+  const [authInitialMode, setAuthInitialMode] = useState<'login' | 'register'>('login');
+  const cloudSyncDone = useRef(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('easySplit_theme');
     if (savedTheme) return savedTheme === 'dark';
@@ -59,8 +69,12 @@ const App: React.FC = () => {
 
   const [showHelp, setShowHelp] = useState(false);
   const [showTable, setShowTable] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSaveGroupModal, setShowSaveGroupModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [history, setHistory] = useState<SavedBill[]>([]);
+  const [userProfile, setUserProfile] = useState<{ display_name: string | null; prompt_pay_initial: string | null } | null>(null);
+  const [savedGroups, setSavedGroups] = useState<SavedGroupRow[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem('easySplit_history');
@@ -73,12 +87,69 @@ const App: React.FC = () => {
     localStorage.setItem('easySplit_history', JSON.stringify(history));
   }, [history]);
 
-  const handleStart = () => setView('wizard');
-  const handleFinishWizard = () => {
-    setView('calculator');
-    // Important: Scroll to top to ensure user sees the main content, not stuck at bottom
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  // Reset cloud sync flag when user logs out
+  useEffect(() => {
+    if (!auth?.user) cloudSyncDone.current = false;
+  }, [auth?.user]);
+
+  // Load user profile when logged in (for "use my profile" in bill)
+  useEffect(() => {
+    if (!auth?.user?.id) {
+      setUserProfile(null);
+      return;
+    }
+    getProfile(auth.user.id).then((p) => {
+      setUserProfile(p ? { display_name: p.display_name ?? null, prompt_pay_initial: p.prompt_pay_initial ?? null } : null);
+    });
+  }, [auth?.user?.id]);
+
+  // Load saved groups when logged in
+  useEffect(() => {
+    if (!auth?.user?.id) {
+      setSavedGroups([]);
+      return;
+    }
+    fetchSavedGroups(auth.user.id).then(setSavedGroups);
+  }, [auth?.user?.id]);
+
+  // Load cloud history when user logs in and merge with local
+  useEffect(() => {
+    if (!auth?.isConfigured || !auth.user?.id || cloudSyncDone.current) return;
+    cloudSyncDone.current = true;
+    fetchBillHistory(auth.user.id).then((cloudBills) => {
+      if (cloudBills.length === 0) return;
+      setHistory((prev) => {
+        const byId = new Map(prev.map((b) => [b.id, b]));
+        cloudBills.forEach((b) => byId.set(b.id, b));
+        return Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp);
+      });
+    });
+  }, [auth?.isConfigured, auth?.user?.id]);
+
+  const handleImportFromDevice = async () => {
+    if (!auth?.user) return;
+    await saveAllBillsToCloud(auth.user.id, history);
+    const cloud = await fetchBillHistory(auth.user.id);
+    setHistory(cloud);
   };
+
+  const handleSaveGroup = async (name: string) => {
+    if (!auth?.user || members.length === 0) return;
+    const id = await createSavedGroup(auth.user.id, name, members);
+    if (id) setSavedGroups((prev) => [{ id, user_id: auth!.user!.id, name, members, created_at: new Date().toISOString() }, ...prev]);
+  };
+
+  const handleLoadGroup = (group: SavedGroupRow) => {
+    const newMembers = group.members.map((m, i) => ({
+      ...m,
+      id: crypto.randomUUID(),
+      isPayer: i === 0,
+    }));
+    setMembers(newMembers);
+  };
+
+  const handleStart = () => setView('wizard');
+  const handleFinishWizard = () => setView('calculator');
 
   const handleSaveToHistory = () => {
     const { summaries } = calculateSummary(members, items, receipts, config);
@@ -94,6 +165,7 @@ const App: React.FC = () => {
         total
     };
     setHistory(prev => [newBill, ...prev]);
+    if (auth?.user) void saveBillToCloud(auth.user.id, newBill);
   };
 
   const handleLoadBill = (bill: SavedBill) => {
@@ -111,7 +183,10 @@ const App: React.FC = () => {
       setView('calculator');
   };
 
-  const handleDeleteBill = (id: string) => setHistory(prev => prev.filter(b => b.id !== id));
+  const handleDeleteBill = (id: string) => {
+    setHistory(prev => prev.filter(b => b.id !== id));
+    if (auth?.user) void deleteBillFromCloud(auth.user.id, id);
+  };
 
   const { summaries } = calculateSummary(members, items, receipts, config);
   const grandTotal = summaries.reduce((acc, curr) => acc + curr.totalConsumption, 0);
@@ -305,7 +380,6 @@ const App: React.FC = () => {
     let targetPayerId = overridePayerId || members.find(m => m.isPayer)?.id || members[0]?.id || '';
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
       const allNewItems: Item[] = [];
       const newReceipts: Receipt[] = [];
       for (let i = 0; i < files.length; i++) {
@@ -392,9 +466,18 @@ const App: React.FC = () => {
 
   const scrollToSummary = () => document.getElementById('summary-section')?.scrollIntoView({ behavior: 'smooth' });
 
-  if (view === 'landing') return <><LandingPage onStart={handleStart} onShowHelp={() => setShowHelp(true)} onLoadDemo={handleLoadMockData} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} /><HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} /></>;
-  if (view === 'history') return <HistoryView history={history} onBack={() => setView(members.length > 0 ? 'calculator' : 'landing')} onLoadBill={handleLoadBill} onDeleteBill={handleDeleteBill} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
-  if (view === 'wizard') return <ManualWizard onFinish={handleFinishWizard} onBack={() => setView('landing')} billName={billName} setBillName={setBillName} members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} items={items} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={handleUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onUpdatePayerPromptPay={handleUpdatePayerPromptPay} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
+  if (auth?.loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center text-slate-500 dark:text-slate-400 font-medium">กำลังโหลด...</div>
+      </div>
+    );
+  }
+
+  if (view === 'auth' && auth?.isConfigured) return <AuthView key={authInitialMode} initialMode={authInitialMode} onBack={() => setView('landing')} onSuccess={() => setView('landing')} signIn={auth.signIn} signUp={auth.signUp} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
+  if (view === 'landing') return <><LandingPage onStart={handleStart} onShowHelp={() => setShowHelp(true)} onOpenLogin={auth?.isConfigured ? () => { setAuthInitialMode('login'); setView('auth'); } : undefined} onOpenRegister={auth?.isConfigured ? () => { setAuthInitialMode('register'); setView('auth'); } : undefined} authUser={auth?.user ?? null} onSignOut={auth?.signOut} onOpenProfile={auth?.user ? () => setShowProfileModal(true) : undefined} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} /><HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} /><ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} onSaved={() => auth?.user?.id && getProfile(auth.user.id).then((p) => p && setUserProfile({ display_name: p.display_name ?? null, prompt_pay_initial: p.prompt_pay_initial ?? null }))} userId={auth?.user?.id ?? ''} isDarkMode={isDarkMode} /></>;
+  if (view === 'history') return <HistoryView history={history} onBack={() => setView(members.length > 0 ? 'calculator' : 'landing')} onLoadBill={handleLoadBill} onDeleteBill={handleDeleteBill} onImportFromDevice={auth?.user ? handleImportFromDevice : undefined} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
+  if (view === 'wizard') return <ManualWizard onFinish={handleFinishWizard} onBack={() => setView('landing')} billName={billName} setBillName={setBillName} members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} userProfile={userProfile} savedGroups={savedGroups} onLoadGroup={handleLoadGroup} items={items} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={handleUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onUpdatePayerPromptPay={handleUpdatePayerPromptPay} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300 pb-40">
@@ -405,6 +488,12 @@ const App: React.FC = () => {
             <h1 className="text-xl font-bold tracking-tight text-white">HanTao</h1>
           </div>
           <div className="flex gap-2 items-center">
+            <button onClick={() => setView('history')} className="p-2 text-teal-100 hover:text-white bg-teal-800/40 rounded-full transition-all" title="ประวัติบิล"><History size={20} /></button>
+            {auth?.user && (
+              <>
+                <button onClick={() => setShowProfileModal(true)} className="text-teal-100 text-sm max-w-[120px] truncate hover:text-white" title={auth.user.email ?? ''}>{auth.user.email}</button>
+              </>
+            )}
             <button onClick={toggleTheme} className="p-2 text-teal-100 hover:text-white bg-teal-800/40 rounded-full transition-all">{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button>
             <button onClick={() => setShowHelp(true)} className="p-1.5 text-teal-100 hover:text-white"><HelpCircle size={22} /></button>
           </div>
@@ -413,11 +502,20 @@ const App: React.FC = () => {
 
       <main className="max-w-2xl mx-auto p-4 space-y-6 mt-2">
         <section className="animate-fade-in-up"><div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 flex items-center gap-3 transition-colors"><div className="bg-orange-100 dark:bg-orange-900/30 p-2.5 rounded-xl text-orange-600 dark:text-orange-400 shadow-sm"><FileText size={22} /></div><div className="flex-1 relative group"><label className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider block mb-0.5">ชื่อบิล</label><input type="text" value={billName} onChange={(e) => setBillName(e.target.value)} className="w-full font-bold text-gray-800 dark:text-white text-lg bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-slate-700 focus:border-teal-500 focus:outline-none py-0.5 transition-all" placeholder="ตั้งชื่อบิล..." /></div></div></section>
-        <section className="animate-fade-in-up"><MemberSection members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} onUpdatePayerPromptPay={handleUpdatePayerPromptPay} /></section>
+        <section className="animate-fade-in-up">
+          <MemberSection members={members} onAddMember={handleAddMember} onRemoveMember={handleRemoveMember} />
+          {auth?.user && members.length > 0 && (
+            <button type="button" onClick={() => setShowSaveGroupModal(true)} className="mt-3 text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">
+              บันทึกกลุ่มเพื่อน ({members.length} คน)
+            </button>
+          )}
+        </section>
         <section className="animate-fade-in-up"><ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={handleUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} onUpdateItemAdjustments={handleUpdateItemAdjustments} /></section>
         <section id="summary-section" className="animate-fade-in-up"><SummarySection members={members} items={items} receipts={receipts} config={config} setConfig={setConfig} billName={billName} onViewTable={() => setShowTable(true)} onUpdatePromptPay={handleUpdatePayerPromptPay} onSaveHistory={handleSaveToHistory} /></section>
       </main>
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} onSaved={() => auth?.user?.id && getProfile(auth.user.id).then((p) => p && setUserProfile({ display_name: p.display_name ?? null, prompt_pay_initial: p.prompt_pay_initial ?? null }))} userId={auth?.user?.id ?? ''} isDarkMode={isDarkMode} />
+      <SaveGroupModal isOpen={showSaveGroupModal} onClose={() => setShowSaveGroupModal(false)} onSave={handleSaveGroup} memberCount={members.length} isDarkMode={isDarkMode} />
       <TableSummary isOpen={showTable} onClose={() => setShowTable(false)} members={members} items={items} config={config} billName={billName} receipts={receipts} />
       <div className="fixed bottom-0 left-0 right-0 bg-slate-900 text-white border-t border-slate-800 p-5 z-30 pb-safe transition-all"><div className="max-w-2xl mx-auto flex justify-between items-center gap-4"><div><p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.15em] mb-1">ยอดรวมทั้งหมด</p><p className="text-3xl font-black text-teal-400 leading-none">{formatCurrency(grandTotal)}</p></div><button onClick={scrollToSummary} className="bg-teal-600 hover:bg-teal-500 px-7 py-4 rounded-[1.25rem] font-black text-xl active:scale-90 transition-all flex items-center gap-2">ดูสรุป <ChevronRight size={22} strokeWidth={3} /></button></div></div>
     </div>

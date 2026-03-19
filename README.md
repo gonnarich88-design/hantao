@@ -15,6 +15,9 @@ View your app in AI Studio: https://ai.studio/apps/drive/1F_lItjZ3xAJDKYcNC2ao2O
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Optional: Create `.env.local` with:
+   - `GEMINI_API_KEY` — for receipt scan (Gemini AI)
+   - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` — for member system (auth, cloud history, profile, saved groups). If not set, the app runs without login; history stays in localStorage only.
+3. Optional: Run [supabase/migrations/001_initial.sql](supabase/migrations/001_initial.sql) in your Supabase project (SQL Editor) to create tables.
+4. Run the app:
    `npm run dev`

@@ -1,7 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Check, ChevronRight, UserPlus, ShoppingBag, Receipt, User, HelpCircle, FileText, Sparkles, Calculator, Sun, Moon, Camera, PenLine, ScanLine } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, UserPlus, ShoppingBag, Receipt, User, HelpCircle, FileText, Sparkles, Calculator, Sun, Moon, Camera, PenLine, ScanLine, UserCircle } from 'lucide-react';
 import { Member, Item, Receipt as ReceiptType, BillConfig } from '../types';
+import type { SavedGroupRow } from '../lib/savedGroups';
 import { MemberSection } from './MemberSection';
 import { ItemSection } from './ItemSection';
 
@@ -13,6 +14,9 @@ interface ManualWizardProps {
   members: Member[];
   onAddMember: (name: string, promptPay?: string) => void;
   onRemoveMember: (id: string) => void;
+  userProfile?: { display_name: string | null; prompt_pay_initial: string | null } | null;
+  savedGroups?: SavedGroupRow[];
+  onLoadGroup?: (group: SavedGroupRow) => void;
   items: Item[];
   receipts: ReceiptType[];
   config: BillConfig;
@@ -43,6 +47,9 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
   members,
   onAddMember,
   onRemoveMember,
+  userProfile,
+  savedGroups = [],
+  onLoadGroup,
   items,
   receipts,
   config,
@@ -75,11 +82,7 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
   // 4: Item Section (Was 3)
 
   const handleNext = () => {
-    // Validate Members before proceeding past step 2
-    if (step === 2 && members.length === 0) {
-        alert("กรุณาเพิ่มสมาชิกอย่างน้อย 1 คน");
-        return;
-    }
+    if (step === 2 && members.length === 0) return alert("กรุณาเพิ่มสมาชิก");
     
     if (step === 4) {
         onFinish();
@@ -99,7 +102,7 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
     switch (step) {
       case 0:
         return (
-          <div key="step0" className="flex flex-col items-center text-center space-y-8 px-4 pt-10 animate-fade-in-up pb-32">
+          <div key="step0" className="flex flex-col items-center text-center space-y-8 px-4 pt-10 animate-fade-in-up">
             <div className="relative">
                 <div className="absolute inset-0 bg-teal-200 dark:bg-teal-900/30 blur-xl opacity-30 rounded-full"></div>
                 <div className="relative w-24 h-24 bg-gradient-to-tr from-teal-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-3xl flex items-center justify-center text-teal-600 shadow-xl border border-teal-100 dark:border-slate-700 rotate-3 transition-colors">
@@ -124,7 +127,7 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
         );
       case 1:
         return (
-          <div key="step1" className="flex flex-col items-center space-y-6 px-4 pt-10 animate-fade-in-up pb-32">
+          <div key="step1" className="flex flex-col items-center space-y-6 px-4 pt-10 animate-fade-in-up">
              <div className="text-center">
                 <div className="inline-flex p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl text-orange-500 mb-4 shadow-sm border border-orange-100 dark:border-orange-900/30"><FileText size={40} /></div>
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">ตั้งชื่อบิล</h2>
@@ -141,14 +144,41 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
                 <div className="inline-flex p-3 bg-teal-50 dark:bg-teal-900/30 rounded-xl text-teal-600 dark:text-teal-400 mb-3 border border-teal-100 dark:border-teal-900/30"><UserPlus size={28} /></div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white">เพิ่มสมาชิก</h2>
              </div>
-             <div className="flex-1 overflow-y-auto px-4 pb-32">
-                <MemberSection members={members} onAddMember={onAddMember} onRemoveMember={onRemoveMember} compact={true} onUpdatePayerPromptPay={onUpdatePayerPromptPay} />
+             {members.length === 0 && savedGroups.length > 0 && onLoadGroup && (
+               <div className="px-4 pb-2 space-y-2">
+                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">โหลดจากกลุ่มที่บันทึก</p>
+                 {savedGroups.map((group) => (
+                   <button
+                     key={group.id}
+                     type="button"
+                     onClick={() => onLoadGroup(group)}
+                     className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                   >
+                     <span>{group.name}</span>
+                     <span className="text-slate-400 dark:text-slate-500">{group.members.length} คน</span>
+                   </button>
+                 ))}
+               </div>
+             )}
+             {members.length === 0 && userProfile?.display_name && (
+               <div className="px-4 pb-2">
+                 <button
+                   type="button"
+                   onClick={() => onAddMember(userProfile.display_name ?? 'ฉัน', userProfile.prompt_pay_initial ?? undefined)}
+                   className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300 font-medium flex items-center justify-center gap-2 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                 >
+                   <UserCircle size={20} /> ใช้ข้อมูลของฉัน (ชื่อ + PromptPay)
+                 </button>
+               </div>
+             )}
+             <div className="flex-1 overflow-y-auto px-4 pb-4">
+                <MemberSection members={members} onAddMember={onAddMember} onRemoveMember={onRemoveMember} compact={true} />
              </div>
           </div>
         );
       case 3:
         return (
-          <div key="step3" className="flex flex-col items-center text-center space-y-8 px-4 pt-10 animate-fade-in-up pb-32">
+          <div key="step3" className="flex flex-col items-center text-center space-y-8 px-4 pt-10 animate-fade-in-up">
             <div className="text-center">
                 <div className="inline-flex p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl text-indigo-500 mb-4 shadow-sm border border-indigo-100 dark:border-indigo-900/30"><ShoppingBag size={40} /></div>
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">เพิ่มรายการอาหาร</h2>
@@ -186,9 +216,8 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
                 <div className="inline-flex p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400 mb-3 border border-indigo-100 dark:border-indigo-900/30"><ShoppingBag size={28} /></div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white">รายการอาหาร</h2>
              </div>
-             {/* Added pb-32 to ensure content isn't hidden behind fixed footer */}
-             <div className="flex-1 overflow-y-auto px-4 pb-32 no-scrollbar">
-                <ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={onAddItem} onRemoveItem={onRemoveItem} onUpdateItem={onUpdateItem} onUpdateReceiptName={onUpdateReceiptName} onUpdateReceiptSettings={onUpdateReceiptSettings} onUpdateReceiptRates={onUpdateReceiptRates} onUpdateReceiptDiscount={onUpdateReceiptDiscount} onUpdateReceiptTotal={onUpdateReceiptTotal} onRemoveReceipt={onRemoveReceipt} onAddReceipt={onAddReceipt} onToggleAssignment={onToggleAssignment} onAssignAll={onAssignAll} onScanReceipt={onScanReceipt} isScanning={isScanning} compact={true} onUpdateItemAdjustments={() => {}} />
+             <div className="flex-1 overflow-y-auto px-4 pb-4">
+                <ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={onAddItem} onRemoveItem={onRemoveItem} onUpdateItem={onUpdateItem} onUpdateReceiptName={onUpdateReceiptName} onUpdateReceiptSettings={onUpdateReceiptSettings} onUpdateReceiptRates={onUpdateReceiptRates} onUpdateReceiptDiscount={onUpdateReceiptDiscount} onUpdateReceiptTotal={onUpdateReceiptTotal} onRemoveReceipt={onRemoveReceipt} onAddReceipt={onAddReceipt} onToggleAssignment={onToggleAssignment} onAssignAll={onAssignAll} onScanReceipt={onScanReceipt} isScanning={isScanning} compact={true} />
              </div>
           </div>
         );
@@ -211,11 +240,13 @@ export const ManualWizard: React.FC<ManualWizardProps> = ({
       </div>
       <div className="flex-1 flex flex-col w-full max-w-lg mx-auto relative">{renderStepContent()}</div>
       
-      {/* Changed to FIXED position to ensure it's always visible and clickable */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 pb-safe pt-2 border-t border-gray-50 dark:border-slate-800 z-50 transition-colors shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-none">
+      {/* Hide bottom bar on choice screens (Step 0 and Step 3) to force user to choose an option, 
+          unless you want a "Next" button that defaults to something. 
+          For better UX, let's keep it but make it act as "Next" or "Skip" */}
+      <div className="p-4 bg-white dark:bg-slate-900 pb-safe pt-2 border-t border-gray-50 dark:border-slate-800 sticky bottom-0 z-20 transition-colors">
          <div className="max-w-lg mx-auto w-full">
             {step !== 0 && step !== 3 ? (
-                <button onClick={handleNext} className={`w-full py-4 rounded-[1.5rem] font-bold text-lg shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-white ${step === 4 ? 'bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-500' : 'bg-gradient-to-r from-teal-500 to-teal-600 shadow-teal-200 dark:shadow-none'}`}>
+                <button onClick={handleNext} className={`w-full py-4 rounded-[1.5rem] font-bold text-lg shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-white ${step === 4 ? 'bg-slate-900 dark:bg-teal-600 hover:bg-slate-900' : 'bg-gradient-to-r from-teal-500 to-teal-600 shadow-teal-200 dark:shadow-none'}`}>
                     {step === 4 && <Calculator size={20} />} {step === 4 ? "สรุปยอดรวม" : "ถัดไป"} {step !== 4 && <ChevronRight size={20} />}
                 </button>
             ) : (

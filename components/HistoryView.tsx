@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Clock, Trash2, FileText, ChevronRight, Sun, Moon } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Clock, Trash2, FileText, ChevronRight, Sun, Moon, CloudUpload } from 'lucide-react';
 import { SavedBill } from '../types';
 import { formatCurrency } from '../utils/calculations';
 
@@ -8,6 +8,7 @@ interface HistoryViewProps {
   onBack: () => void;
   onLoadBill: (bill: SavedBill) => void;
   onDeleteBill: (id: string) => void;
+  onImportFromDevice?: () => void | Promise<void>;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
 }
@@ -17,9 +18,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onBack, 
   onLoadBill,
   onDeleteBill,
+  onImportFromDevice,
   isDarkMode,
   onToggleTheme
 }) => {
+  const [importing, setImporting] = useState(false);
+  const handleImport = async () => {
+    if (!onImportFromDevice) return;
+    setImporting(true);
+    try { await onImportFromDevice(); } finally { setImporting(false); }
+  };
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex flex-col transition-colors">
       <header className="bg-white dark:bg-slate-900 p-4 shadow-sm sticky top-0 z-10 border-b dark:border-slate-800 transition-colors">
@@ -39,6 +47,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
       </header>
 
       <main className="max-w-2xl mx-auto w-full p-4 flex-1">
+        {onImportFromDevice && (
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            className="w-full mb-4 py-3 px-4 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <CloudUpload size={18} />
+            {importing ? 'กำลังนำเข้า...' : 'นำเข้าประวัติจากเครื่องนี้ขึ้นคลาวด์'}
+          </button>
+        )}
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-slate-600">
             <div className="bg-gray-100 dark:bg-slate-900 p-4 rounded-full mb-4">

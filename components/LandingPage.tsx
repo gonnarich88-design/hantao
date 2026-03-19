@@ -1,132 +1,161 @@
 
 import React from 'react';
-import { Calculator, Users, Receipt, ArrowRight, Sparkles, HelpCircle, Beaker, Sun, Moon, Percent, Split, Coins } from 'lucide-react';
+import { Users, Receipt, ArrowRight, HelpCircle, Sun, Moon, LogIn, UserPlus, LogOut } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 
 interface LandingPageProps {
   onStart: () => void;
   onShowHelp: () => void;
-  onLoadDemo: () => void;
+  onLoadDemo?: () => void;
+  onOpenAuth?: () => void;
+  onOpenLogin?: () => void;
+  onOpenRegister?: () => void;
+  authUser?: User | null;
+  onSignOut?: () => void;
+  onOpenProfile?: () => void;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ 
-  onStart, 
-  onShowHelp, 
+export const LandingPage: React.FC<LandingPageProps> = ({
+  onStart,
+  onShowHelp,
   onLoadDemo,
+  onOpenAuth,
+  onOpenLogin,
+  onOpenRegister,
+  authUser,
+  onSignOut,
+  onOpenProfile,
   isDarkMode,
   onToggleTheme
 }) => {
+  const dark = isDarkMode !== false;
+  const showAuthButtons = !authUser && (onOpenLogin ?? onOpenRegister ?? onOpenAuth);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-700 dark:from-slate-900 dark:via-slate-950 dark:to-teal-950 flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-500">
-      
-      {/* Top Header Actions */}
-      <div className="absolute top-6 right-6 z-20 flex gap-2">
-        {onToggleTheme && (
-          <button 
-            onClick={onToggleTheme}
-            className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl border border-white/20 text-white transition-all active:scale-95 shadow-lg"
-            title={isDarkMode ? "เปิดโหมดสว่าง" : "เปิดโหมดมืด"}
+    <div className={`min-h-screen flex flex-col items-center justify-center px-5 py-6 relative overflow-hidden transition-colors duration-500 pb-safe ${dark ? 'bg-[#0f172a]' : 'bg-gradient-to-b from-slate-50 to-teal-50/50'}`}>
+      {/* Gradient background */}
+      {dark ? (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-teal-950/40 to-slate-900" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(20,184,166,0.25),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_80%_80%,rgba(16,185,129,0.12),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_20%_90%,rgba(6,182,212,0.1),transparent)]" />
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(20,184,166,0.12),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_80%_80%,rgba(16,185,129,0.08),transparent)]" />
+        </>
+      )}
+
+      {/* Header: compact */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center px-4 pt-4 pb-2 safe-area-inset-top">
+        <h2 className={`text-lg font-bold ${dark ? 'text-white' : 'text-slate-800'}`}>HanTao</h2>
+        <div className="flex items-center gap-2">
+          {authUser && (
+            <>
+              {onOpenProfile && (
+                <button onClick={onOpenProfile} className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium min-h-[44px] ${dark ? 'bg-white/5 border-white/10 text-white/80' : 'bg-white/80 border-slate-200 text-slate-600'}`} title="โปรไฟล์">
+                  โปรไฟล์
+                </button>
+              )}
+              {onSignOut && (
+                <button onClick={onSignOut} className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium min-h-[44px] ${dark ? 'bg-white/5 border-white/10 text-white/80' : 'bg-white/80 border-slate-200 text-slate-600'}`} title={authUser.email ?? ''}>
+                  <LogOut size={16} /> ออกจากระบบ
+                </button>
+              )}
+            </>
+          )}
+          {onToggleTheme && (
+            <button onClick={onToggleTheme} className={`p-2.5 rounded-xl border min-h-[44px] min-w-[44px] flex items-center justify-center ${dark ? 'bg-white/5 border-white/10 text-white/80' : 'bg-white/80 border-slate-200 text-slate-600'}`} title={isDarkMode ? 'โหมดสว่าง' : 'โหมดมืด'}>
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center text-center pt-4">
+        {/* Hero: short */}
+        <div className="mb-6" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
+          <div className="relative inline-flex mb-4">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-xl -rotate-3">
+              <Receipt size={40} className="text-white" strokeWidth={2} />
+            </div>
+            <div className={`absolute -bottom-1 -right-1 w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center rotate-6 ${dark ? 'ring-2 ring-slate-900/20' : 'ring-2 ring-white/50'}`}>
+              <Users size={22} className="text-white" strokeWidth={2.5} />
+            </div>
+          </div>
+          <h1 className={`text-3xl font-black tracking-tight mb-1 ${dark ? 'text-white' : 'text-slate-800'}`}>HanTao</h1>
+          <p className={`text-sm ${dark ? 'text-teal-200/90' : 'text-teal-700/90'}`}>หารค่าอาหาร... ง่ายนิดเดียว</p>
+        </div>
+
+        {/* CTA block: Guest + Login + Register */}
+        <div className="w-full space-y-3 max-w-sm">
+          {/* 1. Guest - primary */}
+          <button
+            onClick={onStart}
+            className={`w-full group flex items-center gap-4 p-4 rounded-2xl border text-left transition-all duration-300 active:scale-[0.98] min-h-[52px] ${dark ? 'bg-teal-500/20 hover:bg-teal-500/30 border-teal-400/40' : 'bg-white hover:bg-teal-50 border-teal-200 shadow-lg shadow-slate-200/50'}`}
+            style={{ animation: 'fadeInUp 0.5s ease-out 0.1s both' }}
           >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+              <Receipt size={24} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`font-bold text-lg ${dark ? 'text-white' : 'text-slate-800'}`}>Guest</div>
+              <div className={`text-xs mt-0.5 ${dark ? 'text-teal-200/90' : 'text-slate-500'}`}>ไม่ต้องสมัคร</div>
+            </div>
+            <ArrowRight size={20} className={`flex-shrink-0 ${dark ? 'text-teal-300' : 'text-teal-600'}`} />
           </button>
-        )}
+
+          {/* 2. เข้าสู่ระบบ - secondary */}
+          {showAuthButtons && (onOpenLogin ?? onOpenAuth) && (
+            <button
+              onClick={onOpenLogin ?? onOpenAuth}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl border min-h-[48px] font-medium text-sm transition-all active:scale-[0.98] ${dark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'}`}
+              style={{ animation: 'fadeInUp 0.5s ease-out 0.15s both' }}
+            >
+              <LogIn size={18} /> เข้าสู่ระบบ
+            </button>
+          )}
+
+          {/* 3. สมัครสมาชิก - secondary */}
+          {showAuthButtons && onOpenRegister && (
+            <button
+              onClick={onOpenRegister}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl border min-h-[48px] font-medium text-sm transition-all active:scale-[0.98] ${dark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'}`}
+              style={{ animation: 'fadeInUp 0.5s ease-out 0.2s both' }}
+            >
+              <UserPlus size={18} /> สมัครสมาชิก
+            </button>
+          )}
+        </div>
+
+        {/* Help link */}
+        <button
+          onClick={onShowHelp}
+          className={`inline-flex items-center gap-2 text-sm font-medium py-3 mt-6 transition-colors ${dark ? 'text-teal-300/80 hover:text-teal-200' : 'text-teal-600 hover:text-teal-700'}`}
+          style={{ animation: 'fadeInUp 0.5s ease-out 0.25s both' }}
+        >
+          <HelpCircle size={16} />
+          วิธีใช้งาน
+        </button>
+
+        <p className={`text-[10px] mt-6 font-medium tracking-wide ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+          v1.3.0 • HanTao Team
+        </p>
       </div>
 
-      {/* Background Decorative Elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl"></div>
-
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center space-y-8 animate-fade-in-up">
-        
-        {/* Logo Section - NEW DESIGN */}
-        <div className="relative mb-4">
-            {/* Main App Icon Shape */}
-            <div className="bg-white dark:bg-slate-800 p-7 rounded-[2.5rem] shadow-2xl shadow-teal-900/40 transform -rotate-3 border-[6px] border-white/20 backdrop-blur-sm relative z-10">
-                <Receipt size={64} className="text-teal-600 dark:text-teal-400" strokeWidth={2} />
-            </div>
-            
-            {/* Floating Badge (Users/Split) */}
-            <div className="absolute -bottom-4 -right-4 bg-emerald-500 text-white p-3.5 rounded-2xl shadow-lg border-4 border-emerald-600/30 transform rotate-6 z-20">
-                <Users size={28} strokeWidth={2.5} />
-            </div>
-
-            {/* Decorative Sparkle */}
-            <div className="absolute -top-6 -right-6 text-yellow-300 animate-pulse z-0 opacity-80">
-                <Sparkles size={40} />
-            </div>
-        </div>
-        
-        <div>
-            <h1 className="text-4xl font-black text-white tracking-tight mb-2 drop-shadow-sm">
-                HanTao
-            </h1>
-            <p className="text-teal-100 dark:text-teal-400 text-lg font-medium">
-                หารค่าอาหาร... ง่ายนิดเดียว
-            </p>
-        </div>
-
-        {/* Action Cards */}
-        <div className="w-full space-y-4">
-            
-            {/* Single Main Start Button */}
-            <button 
-                onClick={onStart}
-                className="w-full bg-white dark:bg-slate-900 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-900 dark:text-white p-2 rounded-[2rem] shadow-2xl transition-all active:scale-95 flex items-center pr-6 group border-4 border-teal-50/20 dark:border-slate-800/50 relative overflow-hidden"
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-100/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                
-                <div className="bg-gradient-to-br from-teal-400 to-teal-600 w-20 h-20 rounded-[1.5rem] flex items-center justify-center mr-5 shadow-lg group-hover:scale-105 transition-transform">
-                    <Sparkles size={36} className="text-white" />
-                </div>
-                
-                <div className="flex-1 text-left py-2">
-                    <div className="font-black text-xl text-slate-800 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                        เริ่มจดบิลใหม่
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                        รองรับพิมพ์เอง & สแกนบิล
-                    </div>
-                </div>
-                
-                <div className="bg-gray-50 dark:bg-slate-800 p-3 rounded-full group-hover:bg-teal-200 dark:group-hover:bg-teal-900 group-hover:text-teal-800 dark:group-hover:text-teal-300 transition-colors shadow-sm">
-                    <ArrowRight size={20} className="text-gray-400 group-hover:text-teal-800 dark:group-hover:text-teal-300" />
-                </div>
-            </button>
-
-        </div>
-
-        {/* Links */}
-        <div className="flex flex-col items-center gap-4">
-            <button 
-                onClick={onShowHelp}
-                className="flex items-center gap-2 text-teal-100/80 hover:text-white text-sm font-medium transition-colors py-2"
-            >
-                <HelpCircle size={16} />
-                วิธีใช้งาน
-            </button>
-        </div>
-
-        {/* Footer Features */}
-        <div className="grid grid-cols-3 gap-4 w-full pt-8 border-t border-white/10">
-            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
-                <Receipt size={22} strokeWidth={2.5} />
-                <span className="text-[10px] font-bold">คำนวณเป๊ะ</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
-                <Users size={22} strokeWidth={2.5} />
-                <span className="text-[10px] font-bold">หารได้ยกแก๊ง</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-teal-100/80 hover:text-white transition-colors">
-                <Percent size={22} strokeWidth={2.5} />
-                <span className="text-[10px] font-bold">รองรับ VAT & SC</span>
-            </div>
-        </div>
-
-        <div className="text-[10px] text-teal-200/50 mt-4 tracking-wide font-medium">
-            v1.3.0 • Crafted by HanTao Team
-        </div>
-      </div>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .pb-safe { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+        .safe-area-inset-top { padding-top: env(safe-area-inset-top); }
+      `}</style>
     </div>
   );
 };
