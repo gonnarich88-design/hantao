@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, User, X, CreditCard } from 'lucide-react';
 import { Member } from '../types';
 
@@ -31,6 +31,7 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
   const [name, setName] = useState('');
   const [promptPay, setPromptPay] = useState('');
   const [selectedBank, setSelectedBank] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = () => {
     if (name.trim()) {
@@ -38,6 +39,7 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
       setName('');
       setPromptPay('');
       setSelectedBank('');
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
@@ -60,9 +62,11 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
         <div className="flex gap-2">
             <div className={`flex-1 flex items-center bg-white dark:bg-slate-800 border-2 ${compact ? 'border-teal-400 ring-4 ring-teal-50 dark:ring-teal-900/20' : 'border-gray-200 dark:border-slate-700'} rounded-2xl px-4 transition-all focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-50 dark:focus-within:ring-teal-900/40`}>
                 <input
+                    ref={inputRef}
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                     placeholder="ชื่อเพื่อน (เช่น นัท, บีม)..."
                     className="flex-1 py-3.5 text-base bg-transparent focus:outline-none placeholder:text-gray-300 dark:placeholder:slate-600 text-slate-900 dark:text-white"
                 />
