@@ -490,15 +490,15 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                     )}
                 </div>
                 
-                <button 
-                  onClick={() => fileInputRef.current?.click()} 
+                <button
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isScanning}
                   className="w-14 h-14 flex-shrink-0 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30 shadow-sm active:scale-95 transition-all relative group"
                 >
                     {isScanning ? <Loader2 size={22} className="animate-spin" /> : <Camera size={22} />}
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" multiple />
                     {!isScanning && <span className="absolute -top-1 -right-1 h-3 w-3 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"></span>}
                 </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" multiple />
             </div>
 
             {/* Item Name */}
