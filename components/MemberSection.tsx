@@ -2,11 +2,24 @@ import React, { useState } from 'react';
 import { Plus, User, X, CreditCard } from 'lucide-react';
 import { Member } from '../types';
 
+const BANKS = [
+  { id: 'kbank',  label: 'กสิกร',   short: 'KBank', color: 'bg-green-600',   text: 'text-white' },
+  { id: 'scb',    label: 'ไทยพาณิชย์', short: 'SCB',  color: 'bg-purple-700', text: 'text-white' },
+  { id: 'bbl',    label: 'กรุงเทพ',  short: 'BBL',   color: 'bg-blue-900',   text: 'text-white' },
+  { id: 'ktb',    label: 'กรุงไทย', short: 'KTB',   color: 'bg-sky-500',    text: 'text-white' },
+  { id: 'bay',    label: 'กรุงศรี',  short: 'BAY',   color: 'bg-yellow-500', text: 'text-white' },
+  { id: 'ttb',    label: 'ทหารไทย', short: 'TTB',   color: 'bg-pink-500',   text: 'text-white' },
+  { id: 'gsb',    label: 'ออมสิน',  short: 'GSB',   color: 'bg-fuchsia-600', text: 'text-white' },
+  { id: 'baac',   label: 'ธ.ก.ส.',   short: 'BAAC',  color: 'bg-green-800',  text: 'text-white' },
+  { id: 'uob',    label: 'UOB',      short: 'UOB',   color: 'bg-red-600',    text: 'text-white' },
+  { id: 'cimb',   label: 'CIMB',     short: 'CIMB',  color: 'bg-red-800',    text: 'text-white' },
+];
+
 interface MemberSectionProps {
   members: Member[];
-  onAddMember: (name: string, promptPay?: string) => void;
+  onAddMember: (name: string, promptPay?: string, bank?: string) => void;
   onRemoveMember: (id: string) => void;
-  compact?: boolean; 
+  compact?: boolean;
 }
 
 export const MemberSection: React.FC<MemberSectionProps> = ({
@@ -17,12 +30,14 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [promptPay, setPromptPay] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
 
   const handleAdd = () => {
     if (name.trim()) {
-      onAddMember(name, members.length === 0 ? promptPay : undefined);
+      onAddMember(name, members.length === 0 ? promptPay : undefined, members.length === 0 ? selectedBank : undefined);
       setName('');
       setPromptPay('');
+      setSelectedBank('');
     }
   };
 
@@ -70,13 +85,32 @@ export const MemberSection: React.FC<MemberSectionProps> = ({
              <p className="text-xs text-gray-500 dark:text-slate-500 mb-4 leading-relaxed">
                  รายการที่เพิ่มใหม่จะถูกตั้งให้คนนี้จ่ายก่อน (แต่คุณสามารถเปลี่ยนคนจ่ายรายเมนูได้)
              </p>
-             <input 
+             <input
                 type="tel"
                 value={promptPay}
                 onChange={(e) => setPromptPay(e.target.value)}
                 placeholder="เบอร์โทร / PromptPay (ไม่บังคับ)"
                 className="w-full text-base px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-teal-500 transition-all placeholder:text-gray-400 dark:placeholder:slate-600 dark:text-white"
              />
+             <div className="mt-3">
+               <p className="text-xs text-gray-500 dark:text-slate-500 mb-2">ธนาคาร (ไม่บังคับ)</p>
+               <div className="flex flex-wrap gap-2">
+                 {BANKS.map((bank) => (
+                   <button
+                     key={bank.id}
+                     type="button"
+                     onClick={() => setSelectedBank(selectedBank === bank.id ? '' : bank.id)}
+                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${
+                       selectedBank === bank.id
+                         ? `${bank.color} ${bank.text} border-transparent shadow-md scale-105`
+                         : 'bg-transparent border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
+                     }`}
+                   >
+                     {bank.short}
+                   </button>
+                 ))}
+               </div>
+             </div>
           </div>
         )}
       </div>

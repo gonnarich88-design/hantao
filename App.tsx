@@ -191,12 +191,13 @@ const App: React.FC = () => {
   const { summaries } = calculateSummary(members, items, receipts, config);
   const grandTotal = summaries.reduce((acc, curr) => acc + curr.totalConsumption, 0);
 
-  const handleAddMember = (name: string, promptPay?: string) => {
+  const handleAddMember = (name: string, promptPay?: string, bank?: string) => {
     const newMember: Member = {
       id: crypto.randomUUID(),
       name,
       isPayer: members.length === 0,
-      promptPayId: promptPay
+      promptPayId: promptPay,
+      bank,
     };
     setMembers([...members, newMember]);
   };
@@ -392,7 +393,7 @@ const App: React.FC = () => {
             reader.readAsDataURL(file);
           });
           const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.0-flash',
             contents: { 
               parts: [
                 { inlineData: { mimeType: file.type || 'image/jpeg', data: base64Data } }, 

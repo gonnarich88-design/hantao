@@ -4,6 +4,7 @@ export interface Member {
   name: string;
   isPayer: boolean; // Acts as "Default Payer"
   promptPayId?: string;
+  bank?: string;
 }
 
 export interface Receipt {
