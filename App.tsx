@@ -378,10 +378,17 @@ const App: React.FC = () => {
   };
 
   const handleScanReceipts = async (files: File[], overridePayerId?: string) => {
+    console.log('[Scan] Starting scan, files:', files.length);
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      setScanError('API Key ไม่ถูกต้อง กรุณาตั้งค่า GEMINI_API_KEY ใหม่');
+      return;
+    }
     setIsScanning(true);
+    setScanError(null);
     let targetPayerId = overridePayerId || members.find(m => m.isPayer)?.id || members[0]?.id || '';
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const allNewItems: Item[] = [];
       const newReceipts: Receipt[] = [];
       for (let i = 0; i < files.length; i++) {
@@ -424,6 +431,7 @@ const App: React.FC = () => {
               }
             }
           });
+          console.log('[Scan] Raw response:', response.text?.slice(0, 200));
           const data = JSON.parse(response.text || '{}');
           
           // Use AI detected rates, default to standard if missing but not explicitly 0 (though AI should return 0 for Net)
@@ -464,11 +472,13 @@ const App: React.FC = () => {
       });
       setItems(prev => [...prev, ...allNewItems]);
     } catch (error) {
-      console.error('Error scanning:', error);
+      console.error('[Scan] Error:', error);
       const msg = error instanceof Error ? error.message : String(error);
-      setScanError(msg.includes('API_KEY') || msg.includes('401') || msg.includes('403')
+      console.error('[Scan] Error message:', msg);
+      const isKeyError = msg.includes('API_KEY') || msg.includes('401') || msg.includes('403') || msg.includes('api key') || msg.includes('API key') || msg.includes('authentication');
+      setScanError(isKeyError
         ? 'API Key ไม่ถูกต้อง กรุณาตั้งค่า GEMINI_API_KEY ใหม่'
-        : 'สแกนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        : `สแกนไม่สำเร็จ: ${msg.slice(0, 100)}`);
     } finally { setIsScanning(false); }
   };
 

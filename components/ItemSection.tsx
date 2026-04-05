@@ -107,8 +107,9 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && onScanReceipt) {
+    if (e.target.files && e.target.files.length > 0 && onScanReceipt) {
         onScanReceipt(Array.from(e.target.files));
+        e.target.value = '';
     }
   };
 
