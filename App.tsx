@@ -379,7 +379,7 @@ const App: React.FC = () => {
 
   const handleScanReceipts = async (files: File[], overridePayerId?: string) => {
     console.log('[Scan] Starting scan, files:', files.length);
-    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = (window as any).__APP_CONFIG__?.GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       setScanError('API Key ไม่ถูกต้อง กรุณาตั้งค่า GEMINI_API_KEY ใหม่');
       return;
