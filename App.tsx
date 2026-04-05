@@ -75,6 +75,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<SavedBill[]>([]);
   const [userProfile, setUserProfile] = useState<{ display_name: string | null; prompt_pay_initial: string | null } | null>(null);
   const [savedGroups, setSavedGroups] = useState<SavedGroupRow[]>([]);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('easySplit_history');
@@ -462,7 +463,13 @@ const App: React.FC = () => {
         return [...prev, ...newReceipts];
       });
       setItems(prev => [...prev, ...allNewItems]);
-    } catch (error) { console.error('Error scanning:', error); } finally { setIsScanning(false); }
+    } catch (error) {
+      console.error('Error scanning:', error);
+      const msg = error instanceof Error ? error.message : String(error);
+      setScanError(msg.includes('API_KEY') || msg.includes('401') || msg.includes('403')
+        ? 'API Key ไม่ถูกต้อง กรุณาตั้งค่า GEMINI_API_KEY ใหม่'
+        : 'สแกนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+    } finally { setIsScanning(false); }
   };
 
   const scrollToSummary = () => document.getElementById('summary-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -514,6 +521,12 @@ const App: React.FC = () => {
         <section className="animate-fade-in-up"><ItemSection items={items} members={members} receipts={receipts} config={config} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} onUpdateReceiptName={handleUpdateReceiptName} onUpdateReceiptSettings={handleUpdateReceiptSettings} onUpdateReceiptRates={handleUpdateReceiptRates} onUpdateReceiptDiscount={handleUpdateReceiptDiscount} onUpdateReceiptTotal={handleUpdateReceiptTotal} onRemoveReceipt={handleRemoveReceipt} onAddReceipt={handleAddReceipt} onToggleAssignment={handleToggleAssignment} onAssignAll={handleAssignAll} onScanReceipt={handleScanReceipts} isScanning={isScanning} onUpdateItemAdjustments={handleUpdateItemAdjustments} /></section>
         <section id="summary-section" className="animate-fade-in-up"><SummarySection members={members} items={items} receipts={receipts} config={config} setConfig={setConfig} billName={billName} onViewTable={() => setShowTable(true)} onUpdatePromptPay={handleUpdatePayerPromptPay} onSaveHistory={handleSaveToHistory} /></section>
       </main>
+      {scanError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-bold flex items-center gap-3 animate-fade-in-up">
+          <span>{scanError}</span>
+          <button onClick={() => setScanError(null)} className="ml-2 text-red-200 hover:text-white">✕</button>
+        </div>
+      )}
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} onSaved={() => auth?.user?.id && getProfile(auth.user.id).then((p) => p && setUserProfile({ display_name: p.display_name ?? null, prompt_pay_initial: p.prompt_pay_initial ?? null }))} userId={auth?.user?.id ?? ''} isDarkMode={isDarkMode} />
       <SaveGroupModal isOpen={showSaveGroupModal} onClose={() => setShowSaveGroupModal(false)} onSave={handleSaveGroup} memberCount={members.length} isDarkMode={isDarkMode} />
