@@ -401,7 +401,7 @@ const App: React.FC = () => {
             reader.readAsDataURL(file);
           });
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-lite-preview-06-17',
+            model: 'gemini-2.5-flash',
             contents: { 
               parts: [
                 { inlineData: { mimeType: file.type || 'image/jpeg', data: base64Data } }, 
