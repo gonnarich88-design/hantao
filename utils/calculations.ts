@@ -113,8 +113,13 @@ export const calculateSummary = (
     }
 
     // 3. Handle Remaining Split (Weighted/Shared or Unit)
-    // Prevent negative remaining cost if fixed deductions > total
-    if (remainingTotalCost < 0) remainingTotalCost = 0;
+    // Prevent negative remaining if fixed deductions > total
+    if (remainingTotalCost < 0) {
+        remainingTotalCost = 0;
+        remainingBaseCost = 0;
+        remainingSC = 0;
+        remainingVAT = 0;
+    }
 
     const totalAssignedShares = item.assignedMemberIds.length;
 
@@ -279,16 +284,16 @@ export const calculateSummary = (
       });
 
       if (discountValue > 0 && receiptGrossTotalWithTax > 0) {
-          let discountBaseAmount = 0;
+          let totalSaving = 0;
           if (receipt.discountType === 'percent') {
-               discountBaseAmount = receiptGrossForDiscountBase * (discountValue / 100);
+              const discountBase = receiptGrossForDiscountBase * (discountValue / 100);
+              const discountSC = discountBase * (receiptScRate / 100);
+              const discountVAT = (discountBase + discountSC) * (receiptVatRate / 100);
+              totalSaving = discountBase + discountSC + discountVAT;
           } else {
-               discountBaseAmount = discountValue;
+              // fixed amount = ลดจากยอดรวมตรงๆ ไม่บวก SC/VAT ซ้ำ
+              totalSaving = discountValue;
           }
-          
-          const savingSC = discountBaseAmount * (receiptScRate / 100);
-          const savingVAT = (discountBaseAmount + savingSC) * (receiptVatRate / 100);
-          const totalSaving = discountBaseAmount + savingSC + savingVAT;
           
           // 1. Adjust Consumers (Reduce Consumption)
           const consumers = receiptMemberConsumption.get(receipt.id);
