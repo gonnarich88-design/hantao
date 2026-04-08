@@ -188,13 +188,14 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
   const renderAllocationSheet = () => {
     const allocationItem = items.find(i => i.id === allocationItemId);
     if (!allocationItemId || !allocationItem) return null;
-    
+
     const currentTotalAllocated = allocationItem.assignedMemberIds.length;
     const isSharedMode = currentTotalAllocated > allocationItem.quantity;
     const hasFixedDeductions = (allocationItem.fixedDeductions?.length || 0) > 0;
-    
-    // Toggle state for row input method (managed locally for UI)
-    // We'll infer mode: if fixedDeduction exists for member, show input. Else show counter.
+    const sheetLineTotal = allocationItem.price * allocationItem.quantity;
+    const costPerShare = isSharedMode && !hasFixedDeductions && currentTotalAllocated > 0
+        ? sheetLineTotal / currentTotalAllocated
+        : null;
 
     return createPortal(
       <div className="fixed inset-0 z-[10000] flex flex-col justify-end">
@@ -205,10 +206,12 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                 <div>
                     <h3 className="text-xl font-black text-slate-800 dark:text-white">{allocationItem.name}</h3>
                     <p className={`text-xs font-bold mt-1 flex items-center gap-1.5 ${isSharedMode || hasFixedDeductions ? 'text-indigo-500' : 'text-teal-600'}`}>
-                        {isSharedMode || hasFixedDeductions ? (
-                           <><Users size={14} /> หารตามสัดส่วน (Shares)</>
+                        {isSharedMode && !hasFixedDeductions ? (
+                           <><Users size={14} /> หารเท่ากัน {currentTotalAllocated} คน • คนละ ~{formatCurrency(costPerShare!)}</>
+                        ) : hasFixedDeductions ? (
+                           <><Users size={14} /> ระบุยอดแยก + หารส่วนที่เหลือ</>
                         ) : (
-                           <><ShoppingBag size={14} /> เลือกแล้ว {currentTotalAllocated} / {allocationItem.quantity} ชิ้น</>
+                           <><ShoppingBag size={14} /> ระบุแล้ว {currentTotalAllocated} / {allocationItem.quantity} ชิ้น{currentTotalAllocated < allocationItem.quantity ? ` • เหลือ ${allocationItem.quantity - currentTotalAllocated} ชิ้น โยนให้คนจ่ายบิล` : ''}</>
                         )}
                     </p>
                 </div>
@@ -619,9 +622,11 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
 
                             // Calculate Line Total for Display
                             const lineTotal = item.price * item.quantity;
+                            const isUnhandled = currentAssigned === 0;
+                            const hasRemainder = isMissingUnits && currentAssigned > 0;
 
                             return (
-                                <div key={item.id} className={`rounded-[1.75rem] p-5 border transition-all ${isMissingUnits ? 'border-amber-100 bg-amber-50/20' : isSharedMode ? 'border-indigo-100 bg-indigo-50/20' : 'bg-white dark:bg-slate-800/50 border-slate-50 dark:border-slate-800 shadow-sm'}`}>
+                                <div key={item.id} className={`rounded-[1.75rem] p-5 border transition-all ${isUnhandled ? 'border-amber-100 bg-amber-50/20' : isSharedMode ? 'border-indigo-100 bg-indigo-50/20' : 'bg-white dark:bg-slate-800/50 border-slate-50 dark:border-slate-800 shadow-sm'}`}>
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex-1 pr-4">
                                             <div className="flex items-center gap-2 flex-wrap">
@@ -632,15 +637,21 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                                                     <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 text-[10px] font-black rounded-md">x{item.quantity}</span>
                                                 )}
                                             </div>
-                                            <div className="mt-1 flex items-center gap-1.5 text-slate-400 font-bold text-[11px]">
-                                                {isMissingUnits && (
-                                                    <><AlertTriangle size={12} className="text-amber-500" /> ยังแบ่งไม่ครบ ({currentAssigned}/{item.quantity})</>
+                                            <div className="mt-1 flex items-center gap-1.5 font-bold text-[11px]">
+                                                {isUnhandled && (
+                                                    <span className="text-amber-500 flex items-center gap-1"><AlertTriangle size={12} /> ยังไม่ได้แบ่ง — โยนทั้งหมดให้คนจ่ายบิล</span>
+                                                )}
+                                                {hasRemainder && (
+                                                    <span className="text-slate-400 flex items-center gap-1"><Info size={12} /> {currentAssigned}/{item.quantity} ชิ้นระบุแล้ว • {item.quantity - currentAssigned} ชิ้นที่เหลือโยนให้คนจ่ายบิล</span>
                                                 )}
                                                 {isFullyAssigned && (
-                                                    <span className="text-emerald-500 flex items-center gap-1"><Check size={12}/> ครบจำนวน ({item.quantity})</span>
+                                                    <span className="text-emerald-500 flex items-center gap-1"><Check size={12}/> ครบแล้ว{item.quantity > 1 ? ` • ${item.quantity} ชิ้น` : ''}</span>
                                                 )}
-                                                {isSharedMode && (
-                                                    <span className="text-indigo-500 flex items-center gap-1"><Users size={12}/> {hasFixed ? 'มีคนจ่ายแบบระบุยอด + หารส่วน' : `หารเฉลี่ย (${currentAssigned} ส่วน)`}</span>
+                                                {isSharedMode && !hasFixed && (
+                                                    <span className="text-indigo-500 flex items-center gap-1"><Users size={12}/> หารเท่ากัน {currentAssigned} คน • คนละ ~{formatCurrency(lineTotal / currentAssigned)}</span>
+                                                )}
+                                                {isSharedMode && hasFixed && (
+                                                    <span className="text-indigo-500 flex items-center gap-1"><Users size={12}/> ระบุยอดแยก + หารส่วนที่เหลือ</span>
                                                 )}
                                             </div>
                                         </div>
@@ -656,12 +667,12 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
 
                                     {/* QUICK SELECT ROW - UPDATED TO WRAP */}
                                     <div className="flex flex-wrap items-center gap-2 mt-3">
-                                        {/* ALL Button - Now Assigns Everyone */}
-                                        <button 
-                                            onClick={() => handleAssignAllOverride(item.id)} 
+                                        {/* ปุ่มหารเท่ากันทุกคน */}
+                                        <button
+                                            onClick={() => handleAssignAllOverride(item.id)}
                                             className="h-10 px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs shadow-md active:scale-95 transition-all"
                                         >
-                                            All
+                                            ทุกคน
                                         </button>
 
                                         {/* Member Pills - CLEANED UP (No Avatar Circle) */}
