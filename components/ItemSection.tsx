@@ -211,7 +211,10 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                         ) : hasFixedDeductions ? (
                            <><Users size={14} /> ระบุยอดแยก + หารส่วนที่เหลือ</>
                         ) : (
-                           <><ShoppingBag size={14} /> ระบุแล้ว {currentTotalAllocated} / {allocationItem.quantity} ชิ้น{currentTotalAllocated < allocationItem.quantity ? ` • เหลือ ${allocationItem.quantity - currentTotalAllocated} ชิ้น โยนให้คนจ่ายบิล` : ''}</>
+                           <>{currentTotalAllocated < allocationItem.quantity
+                                ? <><AlertTriangle size={14} className="text-amber-500" /><span className="text-amber-500">ยังขาดอีก {allocationItem.quantity - currentTotalAllocated} ชิ้น — กด +  เพื่อระบุให้ครบ</span></>
+                                : <><ShoppingBag size={14} /> ระบุแล้ว {currentTotalAllocated} / {allocationItem.quantity} ชิ้น</>
+                            }</>
                         )}
                     </p>
                 </div>
@@ -626,7 +629,7 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                             const hasRemainder = isMissingUnits && currentAssigned > 0;
 
                             return (
-                                <div key={item.id} className={`rounded-[1.75rem] p-5 border transition-all ${isUnhandled ? 'border-amber-100 bg-amber-50/20' : isSharedMode ? 'border-indigo-100 bg-indigo-50/20' : 'bg-white dark:bg-slate-800/50 border-slate-50 dark:border-slate-800 shadow-sm'}`}>
+                                <div key={item.id} className={`rounded-[1.75rem] p-5 border transition-all ${(isUnhandled || hasRemainder) ? 'border-amber-100 bg-amber-50/20' : isSharedMode ? 'border-indigo-100 bg-indigo-50/20' : 'bg-white dark:bg-slate-800/50 border-slate-50 dark:border-slate-800 shadow-sm'}`}>
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex-1 pr-4">
                                             <div className="flex items-center gap-2 flex-wrap">
@@ -642,7 +645,7 @@ export const ItemSection: React.FC<ItemSectionProps> = ({
                                                     <span className="text-amber-500 flex items-center gap-1"><AlertTriangle size={12} /> ยังไม่ได้แบ่ง — โยนทั้งหมดให้คนจ่ายบิล</span>
                                                 )}
                                                 {hasRemainder && (
-                                                    <span className="text-slate-400 flex items-center gap-1"><Info size={12} /> {currentAssigned}/{item.quantity} ชิ้นระบุแล้ว • {item.quantity - currentAssigned} ชิ้นที่เหลือโยนให้คนจ่ายบิล</span>
+                                                    <span className="text-amber-500 flex items-center gap-1"><AlertTriangle size={12} /> ยังขาดอีก {item.quantity - currentAssigned} ชิ้น — กด ⚙️ เพื่อระบุว่าใครรับชิ้นที่เหลือ</span>
                                                 )}
                                                 {isFullyAssigned && (
                                                     <span className="text-emerald-500 flex items-center gap-1"><Check size={12}/> ครบแล้ว{item.quantity > 1 ? ` • ${item.quantity} ชิ้น` : ''}</span>
