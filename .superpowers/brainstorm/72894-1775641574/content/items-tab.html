@@ -1,0 +1,120 @@
+<h2>Tab 1 — 🧾 รายการ (หน้าหลัก)</h2>
+<p class="subtitle">หน้าที่ใช้บ่อยที่สุด — เพิ่มรายการ + เลือกว่าใครกิน/ใช้</p>
+
+<div style="max-width:380px;margin:0 auto">
+
+  <!-- Top bar -->
+  <div style="background:#6366f1;border-radius:12px 12px 0 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="color:white;font-weight:700;font-size:15px">HanTao 🍜</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="background:rgba(255,255,255,0.2);color:white;border-radius:20px;padding:4px 12px;font-size:12px">💳 แอน จ่าย</div>
+      <div style="color:white;font-size:18px;cursor:pointer">⋮</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="background:white;border-bottom:1px solid #e2e8f0;display:flex">
+    <div style="flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:#6366f1;border-bottom:2px solid #6366f1">🧾 รายการ</div>
+    <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#94a3b8">🏪 บิล/ร้าน</div>
+    <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#94a3b8">💰 สรุป</div>
+  </div>
+
+  <!-- Add item form -->
+  <div style="background:#f8fafc;padding:16px;border-bottom:1px solid #e2e8f0">
+    <div style="font-weight:600;font-size:13px;color:#64748b;margin-bottom:10px">+ เพิ่มรายการใหม่</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="mock-input" placeholder="ชื่อรายการ" style="flex:2;font-size:13px" readonly>
+      <input class="mock-input" placeholder="ราคา" style="flex:1;font-size:13px" readonly>
+    </div>
+
+    <!-- Who eats this? -->
+    <div style="font-size:12px;color:#64748b;margin-bottom:6px">ใครกิน/ใช้? (แตะเลือก)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <div style="background:#ede9fe;border:2px solid #6366f1;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5">✓ แอน</div>
+      <div style="background:#f1f5f9;border:2px solid #e2e8f0;border-radius:20px;padding:5px 12px;font-size:12px;color:#94a3b8">บี</div>
+      <div style="background:#ede9fe;border:2px solid #6366f1;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5">✓ ซี</div>
+      <div style="background:#f1f5f9;border:2px solid #e2e8f0;border-radius:20px;padding:5px 12px;font-size:12px;color:#94a3b8">ดี</div>
+      <div style="background:#fef9c3;border:2px solid #fbbf24;border-radius:20px;padding:5px 12px;font-size:12px;color:#92400e">ทุกคน</div>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="mock-button" style="flex:1;background:#6366f1;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600">เพิ่ม</button>
+      <button class="mock-button" style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:10px 12px;font-size:13px">📷 สแกน</button>
+    </div>
+  </div>
+
+  <!-- Items list -->
+  <div style="background:white;padding:12px 16px">
+    <div style="font-weight:600;font-size:12px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">รายการทั้งหมด (3)</div>
+
+    <!-- Item 1 -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-weight:600;font-size:14px">ข้าวผัดกุ้ง</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-weight:700;color:#6366f1;font-size:14px">120฿</div>
+          <div style="color:#94a3b8;cursor:pointer;font-size:16px">✏️</div>
+          <div style="color:#ef4444;cursor:pointer;font-size:16px">🗑</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">แอน</div>
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">บี</div>
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">ซี</div>
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">ดี</div>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-weight:600;font-size:14px">ต้มยำกุ้ง</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-weight:700;color:#6366f1;font-size:14px">180฿</div>
+          <div style="color:#94a3b8;cursor:pointer;font-size:16px">✏️</div>
+          <div style="color:#ef4444;cursor:pointer;font-size:16px">🗑</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">แอน</div>
+        <div style="background:#ede9fe;border-radius:12px;padding:3px 8px;font-size:11px;color:#4f46e5;font-weight:600">ซี</div>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-weight:600;font-size:14px">⚠️ น้ำส้มคั้น ×2</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-weight:700;color:#6366f1;font-size:14px">80฿</div>
+          <div style="color:#94a3b8;cursor:pointer;font-size:16px">✏️</div>
+          <div style="color:#ef4444;cursor:pointer;font-size:16px">🗑</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px">
+        ยังไม่ได้เลือกว่าใครกิน — แตะเพื่อเลือก
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom summary bar -->
+  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:12px 16px;border-radius:0 0 12px 12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:13px;color:#64748b">รวม 3 รายการ</div>
+    <div style="font-weight:700;font-size:16px;color:#6366f1">380฿</div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;max-width:380px;margin-left:auto;margin-right:auto">
+  <div style="background:#f0fdf4;border-radius:10px;padding:14px;font-size:12px">
+    <div style="font-weight:700;margin-bottom:8px;color:#15803d">UX decisions ที่ใส่ไป:</div>
+    <ul style="margin:0;padding-left:16px;color:#374151;line-height:2">
+      <li>ปุ่ม "ทุกคน" — แตะครั้งเดียวเลือกทั้งหมด</li>
+      <li>⚠️ warning ถ้ายังไม่ได้เลือกใคร</li>
+      <li>แสดง badge ชื่อคนในแต่ละรายการ</li>
+      <li>ปุ่มสแกนใบเสร็จ AI อยู่ติดกับปุ่มเพิ่ม</li>
+      <li>"💳 แอน จ่าย" บน header — กดเพื่อเปลี่ยนได้</li>
+    </ul>
+  </div>
+</div>

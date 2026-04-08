@@ -1,0 +1,97 @@
+<h2>เพิ่มรายการ — เลือกวิธี</h2>
+<p class="subtitle">แสดงเมื่อกด "+ เพิ่มรายการ" — ให้ user เลือกก่อน</p>
+
+<div class="split" style="gap:24px;align-items:flex-start">
+
+  <!-- Option A: Bottom sheet -->
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header">A — Bottom Sheet (popup ขึ้นมา)</div>
+    <div class="mockup-body" style="padding:0;background:#f1f5f9;font-family:sans-serif;position:relative;min-height:320px">
+
+      <!-- App background -->
+      <div style="padding:16px;opacity:0.3">
+        <div style="background:white;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px">ข้าวผัดกุ้ง · 120฿</div>
+        <div style="background:white;border-radius:8px;padding:10px;font-size:12px">ต้มยำกุ้ง · 180฿</div>
+      </div>
+
+      <!-- Bottom sheet -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:white;border-radius:16px 16px 0 0;padding:20px;box-shadow:0 -4px 20px rgba(0,0,0,0.15)">
+        <div style="width:36px;height:4px;background:#e2e8f0;border-radius:4px;margin:0 auto 16px"></div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:4px">เพิ่มรายการอย่างไร?</div>
+        <div style="color:#64748b;font-size:12px;margin-bottom:16px">เลือกวิธีที่สะดวก</div>
+
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;border:2px solid #c4b5fd;border-radius:12px;padding:14px;text-align:center;cursor:pointer">
+            <div style="font-size:28px;margin-bottom:6px">📷</div>
+            <div style="font-weight:700;font-size:13px;color:#4f46e5">สแกนใบเสร็จ</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">AI อ่านให้อัตโนมัติ</div>
+          </div>
+          <div style="flex:1;border:2px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;cursor:pointer">
+            <div style="font-size:28px;margin-bottom:6px">✏️</div>
+            <div style="font-weight:700;font-size:13px;color:#374151">พิมพ์เอง</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">ใส่ชื่อและราคา</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="pros-cons">
+        <div class="pros"><h4>ข้อดี</h4><ul><li>ชัดเจน ไม่งง</li><li>ไม่ต้องหาปุ่มสแกน</li></ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul><li>ต้องกด 1 ครั้งก่อน</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: Two buttons in tab -->
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header">B — 2 ปุ่มในหน้าเดียวกัน ⭐ แนะนำ</div>
+    <div class="mockup-body" style="padding:16px;background:#fff;font-family:sans-serif">
+
+      <!-- Tabs -->
+      <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;margin:-16px -16px 14px;padding:0">
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;font-weight:700;color:#6366f1;border-bottom:2px solid #6366f1">🧾 รายการ</div>
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;color:#94a3b8">🏪 บิล/ร้าน</div>
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;color:#94a3b8">💰 สรุป</div>
+      </div>
+
+      <!-- Two add buttons side by side -->
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="mock-button" style="flex:1;background:#6366f1;color:white;border:none;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px">
+          <span>✏️</span> พิมพ์เอง
+        </button>
+        <button class="mock-button" style="flex:1;background:white;border:2px solid #6366f1;color:#6366f1;border-radius:10px;padding:11px 8px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px">
+          <span>📷</span> สแกนใบเสร็จ
+        </button>
+      </div>
+
+      <!-- Items list -->
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">รายการ (2)</div>
+      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:13px;font-weight:600">ข้าวผัดกุ้ง</span>
+          <span style="font-size:13px;font-weight:700;color:#6366f1">120฿</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <div style="background:#ede9fe;border-radius:10px;padding:2px 7px;font-size:10px;color:#4f46e5">แอน</div>
+          <div style="background:#ede9fe;border-radius:10px;padding:2px 7px;font-size:10px;color:#4f46e5">บี</div>
+        </div>
+      </div>
+      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:13px;font-weight:600">ต้มยำกุ้ง</span>
+          <span style="font-size:13px;font-weight:700;color:#6366f1">180฿</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <div style="background:#ede9fe;border-radius:10px;padding:2px 7px;font-size:10px;color:#4f46e5">ซี</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="pros-cons">
+        <div class="pros"><h4>ข้อดี</h4><ul><li>เห็นตัวเลือกทันที</li><li>ไม่ต้องกดเพิ่ม</li><li>เรียบง่าย</li></ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul><li>-</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

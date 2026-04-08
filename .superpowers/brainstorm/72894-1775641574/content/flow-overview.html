@@ -1,0 +1,87 @@
+<h2>Overall Flow — HanTao Redesign</h2>
+<p class="subtitle">ภาพรวม user journey ตั้งแต่เปิดแอปจนได้ยอดโอนเงิน</p>
+
+<div style="display:flex;flex-direction:column;gap:12px;max-width:600px;margin:0 auto">
+
+  <!-- Step 0: Landing -->
+  <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="background:#64748b;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">0</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Landing Page</div>
+        <div style="color:#64748b;font-size:13px">ปุ่ม "สร้างบิลใหม่" ชัดเจน + ดูประวัติ</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#94a3b8;font-size:20px">↓</div>
+
+  <!-- Wizard Box -->
+  <div style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:16px">
+    <div style="font-weight:700;color:#1d4ed8;margin-bottom:12px;font-size:14px">🧙 WIZARD (ครั้งแรก / เริ่มต้น)</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:white;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <div style="background:#3b82f6;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">เพิ่มสมาชิก</div>
+          <div style="color:#64748b;font-size:12px">พิมพ์ชื่อทีละคน กด enter — เพิ่มได้เรื่อย ๆ</div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <div style="background:#3b82f6;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">เลือกว่าใครเป็นคนจ่าย</div>
+          <div style="color:#64748b;font-size:12px">แตะชื่อคนที่ออกเงินจ่ายทั้งบิล (เลือกได้ 1 คน)</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;text-align:right">
+      <span style="background:#3b82f6;color:white;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600">เริ่มใส่รายการ →</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#94a3b8;font-size:20px">↓</div>
+
+  <!-- Main App Tabs -->
+  <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:16px">
+    <div style="font-weight:700;color:#15803d;margin-bottom:12px;font-size:14px">📱 MAIN APP</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="background:#22c55e;color:white;border-radius:8px;padding:8px 12px;flex:1;text-align:center;font-size:13px;font-weight:600">🧾 รายการ</div>
+      <div style="background:white;border:1px solid #86efac;color:#15803d;border-radius:8px;padding:8px 12px;flex:1;text-align:center;font-size:13px;font-weight:600">🏪 บิล/ร้าน</div>
+      <div style="background:white;border:1px solid #86efac;color:#15803d;border-radius:8px;padding:8px 12px;flex:1;text-align:center;font-size:13px;font-weight:600">💰 สรุป</div>
+    </div>
+    <div style="color:#64748b;font-size:12px">เคลื่อนย้ายระหว่าง tab ได้อิสระตลอดเวลา แก้ไขย้อนหลังได้</div>
+  </div>
+
+  <div style="text-align:center;color:#94a3b8;font-size:20px">↓</div>
+
+  <!-- Summary -->
+  <div style="background:#fef9c3;border:2px solid #fde68a;border-radius:12px;padding:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:24px">💸</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">สรุปยอดโอน</div>
+        <div style="color:#64748b;font-size:13px">"บี โอน 150฿ → แอน" พร้อม PromptPay + copy ลิงก์</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:24px;background:#f8fafc;border-radius:10px;padding:16px;max-width:600px;margin-left:auto;margin-right:auto">
+  <div style="font-weight:600;margin-bottom:8px">3 Tabs หลัก:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">
+    <div style="background:#eff6ff;border-radius:8px;padding:10px">
+      <div style="font-weight:600;margin-bottom:4px">🧾 รายการ</div>
+      <div style="color:#64748b">เพิ่ม/แก้ไขรายการอาหาร เลือกว่าใครกินแต่ละอย่าง สแกนใบเสร็จ AI</div>
+    </div>
+    <div style="background:#f0fdf4;border-radius:8px;padding:10px">
+      <div style="font-weight:600;margin-bottom:4px">🏪 บิล/ร้าน</div>
+      <div style="color:#64748b">จัดกลุ่มรายการตามร้าน ตั้ง SC/VAT ส่วนลด</div>
+    </div>
+    <div style="background:#fef9c3;border-radius:8px;padding:10px">
+      <div style="font-weight:600;margin-bottom:4px">💰 สรุป</div>
+      <div style="color:#64748b">ยอดของแต่ละคน รายการโอนเงิน PromptPay</div>
+    </div>
+  </div>
+</div>

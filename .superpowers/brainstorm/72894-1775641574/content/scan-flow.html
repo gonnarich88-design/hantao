@@ -1,0 +1,124 @@
+<h2>ฟีเจอร์สแกนใบเสร็จ AI 📷</h2>
+<p class="subtitle">flow ตั้งแต่กดปุ่มจนได้รายการ — 3 ขั้นตอน</p>
+
+<div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+
+  <!-- Step 1: Upload -->
+  <div class="mockup" style="flex:1;min-width:220px;max-width:260px">
+    <div class="mockup-header">1 — เลือก/ถ่ายรูป</div>
+    <div class="mockup-body" style="padding:16px;background:#fff;font-family:sans-serif">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">อัพโหลดใบเสร็จ</div>
+        <div style="font-size:11px;color:#64748b">รองรับหลายรูปพร้อมกัน</div>
+      </div>
+
+      <!-- Upload area -->
+      <div style="border:2px dashed #c4b5fd;border-radius:12px;padding:20px;text-align:center;background:#faf5ff;margin-bottom:12px">
+        <div style="font-size:32px;margin-bottom:6px">📷</div>
+        <div style="font-size:12px;color:#6366f1;font-weight:600">ถ่ายรูป / เลือกรูป</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px">JPG, PNG, PDF</div>
+      </div>
+
+      <!-- Preview thumbnails (multiple) -->
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <div style="width:56px;height:56px;background:#e0e7ff;border-radius:8px;border:2px solid #6366f1;display:flex;align-items:center;justify-content:center;font-size:20px">🧾</div>
+        <div style="width:56px;height:56px;background:#e0e7ff;border-radius:8px;border:2px solid #6366f1;display:flex;align-items:center;justify-content:center;font-size:20px">🧾</div>
+        <div style="width:56px;height:56px;background:#f1f5f9;border-radius:8px;border:2px dashed #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#94a3b8">+</div>
+      </div>
+
+      <button class="mock-button" style="width:100%;background:#6366f1;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600">
+        ✨ วิเคราะห์ด้วย AI
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Processing -->
+  <div class="mockup" style="flex:1;min-width:220px;max-width:260px">
+    <div class="mockup-header">2 — AI กำลังอ่าน...</div>
+    <div class="mockup-body" style="padding:16px;background:#fff;font-family:sans-serif">
+      <div style="text-align:center;padding:30px 0">
+        <div style="font-size:40px;margin-bottom:12px">🤖</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:6px">AI กำลังอ่านใบเสร็จ</div>
+        <div style="color:#64748b;font-size:12px;margin-bottom:16px">ไม่เกิน 10 วินาที</div>
+
+        <!-- Progress bar -->
+        <div style="background:#e2e8f0;border-radius:20px;height:6px;margin-bottom:8px">
+          <div style="background:#6366f1;width:65%;height:6px;border-radius:20px"></div>
+        </div>
+        <div style="font-size:11px;color:#6366f1">กำลังดึงรายการอาหาร...</div>
+      </div>
+
+      <!-- Receipt thumbnails small -->
+      <div style="display:flex;gap:6px;justify-content:center">
+        <div style="width:40px;height:40px;background:#ede9fe;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🧾</div>
+        <div style="width:40px;height:40px;background:#ede9fe;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🧾</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Review & Confirm -->
+  <div class="mockup" style="flex:1;min-width:260px;max-width:300px">
+    <div class="mockup-header">3 — ตรวจสอบก่อนเพิ่ม</div>
+    <div class="mockup-body" style="padding:16px;background:#fff;font-family:sans-serif">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">AI พบ 4 รายการ ✨</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:12px">แก้ไขได้ก่อนเพิ่มเข้าบิล</div>
+
+      <!-- Detected items -->
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <input value="ข้าวผัดกุ้ง" style="border:none;font-size:12px;font-weight:600;flex:1;outline:none" readonly>
+            <input value="120" style="border:none;font-size:12px;font-weight:700;color:#6366f1;width:48px;text-align:right;outline:none" readonly>
+            <span style="color:#94a3b8;margin-left:4px;font-size:11px">฿</span>
+          </div>
+          <div style="font-size:10px;color:#64748b">ใครกิน? <span style="color:#94a3b8">(แตะเลือก)</span></div>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <div style="background:#ede9fe;border:1.5px solid #6366f1;border-radius:12px;padding:2px 8px;font-size:10px;color:#4f46e5">✓ แอน</div>
+            <div style="background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:12px;padding:2px 8px;font-size:10px;color:#94a3b8">บี</div>
+            <div style="background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:12px;padding:2px 8px;font-size:10px;color:#94a3b8">ซี</div>
+            <div style="background:#fef9c3;border:1.5px solid #fbbf24;border-radius:12px;padding:2px 8px;font-size:10px;color:#92400e">ทุกคน</div>
+          </div>
+        </div>
+
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <input value="ต้มยำกุ้ง" style="border:none;font-size:12px;font-weight:600;flex:1;outline:none" readonly>
+            <input value="180" style="border:none;font-size:12px;font-weight:700;color:#6366f1;width:48px;text-align:right;outline:none" readonly>
+            <span style="color:#94a3b8;margin-left:4px;font-size:11px">฿</span>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <div style="background:#fef9c3;border:1.5px solid #fbbf24;border-radius:12px;padding:2px 8px;font-size:10px;color:#92400e">ทุกคน</div>
+          </div>
+        </div>
+
+        <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:8px;padding:8px 10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <input value="SC 10%" style="border:none;font-size:12px;font-weight:600;flex:1;outline:none;background:transparent" readonly>
+            <span style="font-size:11px;font-weight:700;color:#b45309">+38฿</span>
+          </div>
+          <div style="font-size:10px;color:#b45309">AI ตรวจพบ SC — จะตั้งให้อัตโนมัติ</div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="mock-button" style="flex:1;background:#6366f1;color:white;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:600">เพิ่มทั้งหมด ✓</button>
+        <button class="mock-button" style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 12px;font-size:12px">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;background:#f0fdf4;border-radius:10px;padding:14px;font-size:12px;max-width:760px;margin-left:auto;margin-right:auto">
+  <div style="font-weight:700;margin-bottom:8px;color:#15803d">สิ่งที่ AI จะทำอัตโนมัติ:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+    <div>✅ ดึงชื่อรายการ + ราคา</div>
+    <div>✅ รองรับหลายรูปพร้อมกัน</div>
+    <div>✅ ตรวจจับ SC/VAT ตั้งให้อัตโนมัติ</div>
+    <div>✅ แก้ไขชื่อ/ราคาได้ก่อนเพิ่ม</div>
+    <div>✅ เลือกว่าใครกินแต่ละรายการได้เลย</div>
+    <div>✅ ถ้า AI ผิดพลาด แก้ manual ได้</div>
+  </div>
+</div>

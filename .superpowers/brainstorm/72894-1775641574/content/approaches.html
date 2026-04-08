@@ -1,0 +1,66 @@
+<h2>3 แนวทาง UX สำหรับ HanTao</h2>
+<p class="subtitle">เลือกแนวทางที่รู้สึกถูกทิศทางที่สุด — รายละเอียดปรับได้ทีหลัง</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f0f4ff;padding:16px;font-size:12px;line-height:1.6">
+      <div style="background:#6366f1;color:white;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-weight:600">① เพิ่มคน + เลือกผู้จ่าย</div>
+      <div style="background:#6366f1;color:white;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-weight:600">② เพิ่มรายการ + เลือกว่าใครกิน</div>
+      <div style="background:#6366f1;color:white;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-weight:600">③ ดูสรุป + โอนเงิน</div>
+      <div style="color:#6b7280;font-size:11px;margin-top:4px">แก้ไขย้อนหลังได้ตลอด</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Guided Wizard</h3>
+      <p>3 ขั้นตอนชัดเจน ตั้งค่าครั้งแรกเป็น wizard หลังจากนั้นแก้ได้อิสระ เหมาะกับ user ใหม่มาก</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul><li>ไม่สับสน flow ชัดเจน</li><li>User ใหม่ใช้ได้เลย</li></ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul><li>อาจช้าสำหรับ user เก่า</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f0fdf4;padding:16px;font-size:12px;line-height:1.6">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="background:#22c55e;color:white;border-radius:8px;padding:6px 10px;flex:1;text-align:center;font-weight:600">👥 คน</div>
+        <div style="background:#22c55e;color:white;border-radius:8px;padding:6px 10px;flex:1;text-align:center;font-weight:600">🧾 รายการ</div>
+        <div style="background:#22c55e;color:white;border-radius:8px;padding:6px 10px;flex:1;text-align:center;font-weight:600">💰 สรุป</div>
+      </div>
+      <div style="background:white;border:1px solid #d1fae5;border-radius:8px;padding:10px">
+        <div style="font-weight:600;margin-bottom:6px">+ เพิ่มรายการ</div>
+        <div style="background:#f0fdf4;border-radius:6px;padding:6px;margin-bottom:4px;font-size:11px">ข้าวผัด 120฿ · [แอน] [บี] [ซี]</div>
+        <div style="background:#f0fdf4;border-radius:6px;padding:6px;font-size:11px">ไก่ทอด 80฿ · [แอน] [บี]</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Tab Navigation</h3>
+      <p>3 แท็บ: คน / รายการ / สรุป เคลื่อนย้ายได้อิสระ กดดูสรุปได้ตลอดเวลา</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul><li>เร็ว กระชับ</li><li>เห็นภาพรวมได้ทันที</li></ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul><li>User ใหม่อาจไม่รู้ว่าเริ่มที่ไหน</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fefce8;padding:16px;font-size:12px;line-height:1.6">
+      <div style="background:#eab308;color:white;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-weight:600">① Wizard ครั้งแรก (ตั้งค่าครั้งเดียว)</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <div style="background:white;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;flex:1;text-align:center;font-size:11px">👥 คน</div>
+        <div style="background:white;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;flex:1;text-align:center;font-size:11px">🧾 รายการ</div>
+        <div style="background:white;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;flex:1;text-align:center;font-size:11px">💰 สรุป</div>
+      </div>
+      <div style="color:#6b7280;font-size:11px">② จบ wizard → แก้ไขอิสระผ่าน tab ได้เลย</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Wizard → Tab (Hybrid) ⭐ แนะนำ</h3>
+      <p>เริ่มด้วย wizard 2 ขั้นตอนสั้น ๆ (เพิ่มคน + เลือกผู้จ่าย) แล้วเข้า tab interface ปกติ — ดีที่สุดของทั้งสองแบบ</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>ข้อดี</h4><ul><li>User ใหม่ไม่สับสน</li><li>User เก่าทำงานได้เร็ว</li><li>ตรงกับที่คุยกันมา</li></ul></div>
+        <div class="cons"><h4>ข้อเสีย</h4><ul><li>ซับซ้อนกว่าในการ implement</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
