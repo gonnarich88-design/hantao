@@ -77,16 +77,17 @@ export const ScanReviewSheet: React.FC<ScanReviewSheetProps> = ({
       {phase === 'upload' && (
         <>
           <h3 className="font-semibold text-sm mb-3 dark:text-white">📷 สแกนใบเสร็จ</h3>
-          <div
-            onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-indigo-200 dark:border-indigo-700 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors mb-3"
+          <label
+            htmlFor="scan-file-input"
+            className="border-2 border-dashed border-indigo-200 dark:border-indigo-700 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors mb-3 flex flex-col items-center"
           >
-            <Camera size={32} className="mx-auto text-indigo-400 mb-2" />
+            <Camera size={32} className="text-indigo-400 mb-2" />
             <p className="text-sm font-semibold text-indigo-500">ถ่ายรูป / เลือกรูป</p>
             <p className="text-xs text-gray-400 mt-1">JPG, PNG — เลือกหลายรูปได้</p>
-          </div>
+          </label>
           <input
             ref={fileRef}
+            id="scan-file-input"
             type="file"
             accept="image/*"
             multiple
