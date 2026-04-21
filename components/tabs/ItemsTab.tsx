@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Trash2, AlertTriangle, Camera, PenLine } from 'lucide-react'
+import { Trash2, AlertTriangle, Camera, PenLine, Pencil, Check, X, Users } from 'lucide-react'
 import { Item, Member, Receipt } from '../../types'
 import { formatCurrency } from '../../utils/calculations'
 import { AddItemForm } from './AddItemForm'
@@ -25,12 +25,32 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
   onScanFiles, isScanning
 }) => {
   const [addMode, setAddMode] = useState<AddMode>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editSelected, setEditSelected] = useState<Set<string>>(new Set())
 
   const grandTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const unassigned = items.filter(item => item.assignedMemberIds.length === 0)
 
   const getReceiptName = (receiptId: string) =>
     receipts.find(r => r.id === receiptId)?.name ?? 'ไม่ระบุร้าน'
+
+  const startEdit = (item: Item) => {
+    setEditingId(item.id)
+    setEditSelected(new Set(item.assignedMemberIds))
+  }
+
+  const confirmEdit = (id: string) => {
+    onUpdateItem(id, { assignedMemberIds: Array.from(editSelected) })
+    setEditingId(null)
+  }
+
+  const toggleEditMember = (memberId: string) => {
+    setEditSelected(prev => {
+      const next = new Set(prev)
+      next.has(memberId) ? next.delete(memberId) : next.add(memberId)
+      return next
+    })
+  }
 
   return (
     <div className="p-4">
@@ -100,6 +120,7 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
           <div className="space-y-2">
             {items.map(item => {
               const hasNoAssignee = item.assignedMemberIds.length === 0
+              const isEditing = editingId === item.id
               return (
                 <div
                   key={item.id}
@@ -122,18 +143,48 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                       <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">
                         {formatCurrency(item.price * item.quantity)}฿
                       </span>
-                      <button
-                        onClick={() => onRemoveItem(item.id)}
-                        className="text-red-300 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      {isEditing ? (
+                        <>
+                          <button onClick={() => confirmEdit(item.id)} className="text-green-500 hover:text-green-600 transition-colors"><Check size={15} /></button>
+                          <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={15} /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEdit(item)} className="text-gray-400 hover:text-indigo-500 transition-colors"><Pencil size={15} /></button>
+                          <button onClick={() => onRemoveItem(item.id)} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  {hasNoAssignee ? (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg px-2 py-1">
-                      ⚠️ ยังไม่ได้เลือกว่าใครกิน — แตะ ✏️ เพื่อแก้ไข
-                    </p>
+                  {isEditing ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">ใครกิน/ใช้?</p>
+                        <button onClick={() => setEditSelected(new Set(members.map(m => m.id)))} className="text-xs text-indigo-500 flex items-center gap-1"><Users size={10} /> ทุกคน</button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {members.map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => toggleEditMember(m.id)}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border-2 transition-all ${
+                              editSelected.has(m.id)
+                                ? 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400'
+                            }`}
+                          >
+                            {editSelected.has(m.id) ? '✓ ' : ''}{m.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : hasNoAssignee ? (
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg px-2 py-1 w-full text-left"
+                    >
+                      ⚠️ ยังไม่ได้เลือกว่าใครกิน — แตะเพื่อแก้ไข
+                    </button>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {Array.from(new Set(item.assignedMemberIds)).map(id => {
