@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Trash2, AlertTriangle, Camera, PenLine, Pencil, Check, X, Users } from 'lucide-react'
-import { Item, Member, Receipt } from '../../types'
+import { Trash2, AlertTriangle, Camera, PenLine, Pencil, Check, X } from 'lucide-react'
+import { Item, Member, Receipt, MemberQuantity } from '../../types'
 import { formatCurrency } from '../../utils/calculations'
 import { AddItemForm } from './AddItemForm'
 import { ScanReviewSheet, ScannedItem } from './ScanReviewSheet'
@@ -26,30 +26,58 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
 }) => {
   const [addMode, setAddMode] = useState<AddMode>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editSelected, setEditSelected] = useState<Set<string>>(new Set())
+  const [editQtys, setEditQtys] = useState<MemberQuantity[]>([])
 
   const grandTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const unassigned = items.filter(item => item.assignedMemberIds.length === 0)
+  const isUnassigned = (item: Item) => {
+    if (item.memberQuantities && item.memberQuantities.length > 0)
+      return item.memberQuantities.every(mq => mq.quantity === 0)
+    return item.assignedMemberIds.length === 0
+  }
+  const unassigned = items.filter(isUnassigned)
 
   const getReceiptName = (receiptId: string) =>
     receipts.find(r => r.id === receiptId)?.name ?? 'ไม่ระบุร้าน'
 
   const startEdit = (item: Item) => {
     setEditingId(item.id)
-    setEditSelected(new Set(item.assignedMemberIds))
+    if (item.memberQuantities && item.memberQuantities.length > 0) {
+      // เติม member ที่ขาดให้ครบ
+      const existing = new Map(item.memberQuantities.map(mq => [mq.memberId, mq.quantity]))
+      setEditQtys(members.map(m => ({ memberId: m.id, quantity: existing.get(m.id) ?? 0 })))
+    } else {
+      // แปลง assignedMemberIds เป็น quantity (นับจำนวนซ้ำ)
+      const counts = new Map<string, number>()
+      item.assignedMemberIds.forEach(id => counts.set(id, (counts.get(id) ?? 0) + 1))
+      const equalQty = item.assignedMemberIds.length > 0 ? 1 : 0
+      setEditQtys(members.map(m => ({ memberId: m.id, quantity: counts.has(m.id) ? equalQty : 0 })))
+    }
   }
 
-  const confirmEdit = (id: string) => {
-    onUpdateItem(id, { assignedMemberIds: Array.from(editSelected) })
+  const adjustQty = (memberId: string, delta: number) => {
+    setEditQtys(prev => prev.map(mq =>
+      mq.memberId === memberId ? { ...mq, quantity: Math.max(0, mq.quantity + delta) } : mq
+    ))
+  }
+
+  const confirmEdit = (item: Item) => {
+    const active = editQtys.filter(mq => mq.quantity > 0)
+    const totalAssigned = active.reduce((s, mq) => s + mq.quantity, 0)
+    const isUnequal = active.length > 0 && totalAssigned !== item.quantity * active.length / active.length
+    // ถ้าทุกคนมี qty=1 หรือเท่ากันหมด → ใช้ assignedMemberIds แบบเดิม (backward compat)
+    const allSame = active.every(mq => mq.quantity === active[0].quantity)
+    if (allSame && active.length > 0) {
+      onUpdateItem(item.id, {
+        assignedMemberIds: active.map(mq => mq.memberId),
+        memberQuantities: undefined,
+      })
+    } else {
+      onUpdateItem(item.id, {
+        assignedMemberIds: active.map(mq => mq.memberId),
+        memberQuantities: active,
+      })
+    }
     setEditingId(null)
-  }
-
-  const toggleEditMember = (memberId: string) => {
-    setEditSelected(prev => {
-      const next = new Set(prev)
-      next.has(memberId) ? next.delete(memberId) : next.add(memberId)
-      return next
-    })
   }
 
   return (
@@ -119,8 +147,9 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
           </div>
           <div className="space-y-2">
             {items.map(item => {
-              const hasNoAssignee = item.assignedMemberIds.length === 0
+              const hasNoAssignee = isUnassigned(item)
               const isEditing = editingId === item.id
+              const editTotal = editQtys.reduce((s, mq) => s + mq.quantity, 0)
               return (
                 <div
                   key={item.id}
@@ -145,7 +174,7 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                       </span>
                       {isEditing ? (
                         <>
-                          <button onClick={() => confirmEdit(item.id)} className="text-green-500 hover:text-green-600 transition-colors"><Check size={15} /></button>
+                          <button onClick={() => confirmEdit(item)} className="text-green-500 hover:text-green-600 transition-colors"><Check size={15} /></button>
                           <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={15} /></button>
                         </>
                       ) : (
@@ -158,24 +187,43 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                   </div>
                   {isEditing ? (
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-xs text-gray-500 dark:text-slate-400">ใครกิน/ใช้?</p>
-                        <button onClick={() => setEditSelected(new Set(members.map(m => m.id)))} className="text-xs text-indigo-500 flex items-center gap-1"><Users size={10} /> ทุกคน</button>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">แบ่งจำนวนต่อคน</p>
+                        <span className={`text-xs font-semibold ${editTotal === item.quantity ? 'text-green-500' : 'text-amber-500'}`}>
+                          รวม {editTotal}/{item.quantity}
+                        </span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {members.map(m => (
-                          <button
-                            key={m.id}
-                            onClick={() => toggleEditMember(m.id)}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border-2 transition-all ${
-                              editSelected.has(m.id)
-                                ? 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                                : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400'
-                            }`}
-                          >
-                            {editSelected.has(m.id) ? '✓ ' : ''}{m.name}
-                          </button>
-                        ))}
+                      <div className="space-y-2">
+                        {editQtys.map(mq => {
+                          const member = members.find(m => m.id === mq.memberId)
+                          if (!member) return null
+                          const share = mq.quantity > 0 ? item.price * mq.quantity : 0
+                          return (
+                            <div key={mq.memberId} className="flex items-center gap-2">
+                              <span className={`text-xs font-semibold w-14 truncate ${mq.quantity > 0 ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400 dark:text-slate-500'}`}>
+                                {member.name}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => adjustQty(mq.memberId, -1)}
+                                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 font-bold text-base flex items-center justify-center active:scale-90 transition-all"
+                                >−</button>
+                                <span className={`w-6 text-center text-sm font-bold ${mq.quantity > 0 ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-300 dark:text-slate-600'}`}>
+                                  {mq.quantity}
+                                </span>
+                                <button
+                                  onClick={() => adjustQty(mq.memberId, 1)}
+                                  className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold text-base flex items-center justify-center active:scale-90 transition-all"
+                                >+</button>
+                              </div>
+                              {mq.quantity > 0 && (
+                                <span className="text-xs text-gray-400 dark:text-slate-500 ml-auto">
+                                  {formatCurrency(share)}฿
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   ) : hasNoAssignee ? (
@@ -187,14 +235,24 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                     </button>
                   ) : (
                     <div className="flex flex-wrap gap-1">
-                      {Array.from(new Set(item.assignedMemberIds)).map(id => {
-                        const m = members.find(m => m.id === id)
-                        return m ? (
-                          <span key={id} className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full font-medium">
-                            {m.name}
-                          </span>
-                        ) : null
-                      })}
+                      {(item.memberQuantities && item.memberQuantities.some(mq => mq.quantity > 0)
+                        ? item.memberQuantities.filter(mq => mq.quantity > 0).map(mq => {
+                            const m = members.find(m => m.id === mq.memberId)
+                            return m ? (
+                              <span key={mq.memberId} className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full font-medium">
+                                {m.name} ×{mq.quantity}
+                              </span>
+                            ) : null
+                          })
+                        : Array.from(new Set(item.assignedMemberIds)).map(id => {
+                            const m = members.find(m => m.id === id)
+                            return m ? (
+                              <span key={id} className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full font-medium">
+                                {m.name}
+                              </span>
+                            ) : null
+                          })
+                      )}
                     </div>
                   )}
                 </div>

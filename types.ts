@@ -5,12 +5,18 @@ export interface Member {
   promptPayId?: string // เลขบัญชี หรือ เบอร์พร้อมเพย์ (ชื่อ field คงไว้ backward compat)
 }
 
+export interface MemberQuantity {
+  memberId: string
+  quantity: number
+}
+
 export interface Item {
   id: string
   name: string
   price: number       // ราคาต่อหน่วย
-  quantity: number    // จำนวน
-  assignedMemberIds: string[] // ใครกิน/ใช้ (หารเท่ากัน)
+  quantity: number    // จำนวนรวม
+  assignedMemberIds: string[] // ใครกิน/ใช้ (หารเท่ากัน) — ใช้เมื่อไม่มี memberQuantities
+  memberQuantities?: MemberQuantity[] // แบ่งจำนวนต่อคน (optional)
   receiptId: string
 }
 

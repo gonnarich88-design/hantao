@@ -1,4 +1,19 @@
-import { Member, Item, Receipt, MemberSummary, Transfer } from '../types'
+import { Member, Item, Receipt, MemberSummary, Transfer, MemberQuantity } from '../types'
+
+/**
+ * คืน assignedMemberIds จาก memberQuantities (แต่ละคนซ้ำตามจำนวน)
+ * หรือคืน assignedMemberIds เดิมถ้าไม่มี memberQuantities
+ */
+export function getEffectiveAssignees(item: Item): string[] {
+  if (item.memberQuantities && item.memberQuantities.length > 0) {
+    const result: string[] = []
+    item.memberQuantities.forEach(({ memberId, quantity }) => {
+      for (let i = 0; i < quantity; i++) result.push(memberId)
+    })
+    return result
+  }
+  return item.assignedMemberIds
+}
 
 export function formatCurrency(amount: number): string {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -63,18 +78,33 @@ export function calculateSummary(
 
   // กระจายค่าใช้จ่ายต่อ item
   items.forEach((item) => {
-    if (item.assignedMemberIds.length === 0) return
-
     const scaleFactor = receiptScaleFactors.get(item.receiptId) ?? 1
-    const itemTotal = item.price * item.quantity * scaleFactor
-    const sharePerMember = itemTotal / item.assignedMemberIds.length
 
-    item.assignedMemberIds.forEach((memberId) => {
-      const stats = summaryMap.get(memberId)
-      if (!stats) return
-      stats.totalConsumption += sharePerMember
-      stats.items.push({ name: item.name, share: sharePerMember })
-    })
+    if (item.memberQuantities && item.memberQuantities.length > 0) {
+      // แบ่งตาม quantity ต่อคน
+      const totalQty = item.memberQuantities.reduce((s, mq) => s + mq.quantity, 0)
+      if (totalQty <= 0) return
+      const pricePerUnit = item.price * scaleFactor
+      item.memberQuantities.forEach(({ memberId, quantity }) => {
+        if (quantity <= 0) return
+        const stats = summaryMap.get(memberId)
+        if (!stats) return
+        const share = pricePerUnit * quantity
+        stats.totalConsumption += share
+        stats.items.push({ name: item.name, share })
+      })
+    } else {
+      // หารเท่ากันแบบเดิม
+      if (item.assignedMemberIds.length === 0) return
+      const itemTotal = item.price * item.quantity * scaleFactor
+      const sharePerMember = itemTotal / item.assignedMemberIds.length
+      item.assignedMemberIds.forEach((memberId) => {
+        const stats = summaryMap.get(memberId)
+        if (!stats) return
+        stats.totalConsumption += sharePerMember
+        stats.items.push({ name: item.name, share: sharePerMember })
+      })
+    }
   })
 
   // grand total = ผลรวม consumption ทุกคน
