@@ -30,9 +30,9 @@ components/
   WizardView.tsx            # wizard setup: step 1 (สมาชิก) → step 2 (ผู้จ่าย)
   MainTabView.tsx           # 3-tab container + header + payer picker
   tabs/
-    ItemsTab.tsx            # Tab รายการ — เพิ่ม manual / สแกน
+    ItemsTab.tsx            # Tab รายการ — เพิ่ม manual / สแกน / inline edit
     BillsTab.tsx            # Tab บิล/ร้าน — SC/VAT/ส่วนลด per receipt
-    SummaryTab.tsx          # Tab สรุป — ยอดต่อคน + transfers + แชร์
+    SummaryTab.tsx          # Tab สรุป — avatar, breakdown per person, transfers
     AddItemForm.tsx         # form เพิ่มรายการ manual
     ScanReviewSheet.tsx     # review AI scan result ก่อนเพิ่ม
   LandingPage.tsx
@@ -66,22 +66,54 @@ landing → wizard (2 steps) → calculator (3 tabs) → summary/history
 ## Data Model (types.ts)
 
 ```ts
-Member    { id, name, bank?, promptPayId? }
-Item      { id, name, price, quantity, assignedMemberIds[], receiptId }
-Receipt   { id, name, scRate, vatRate, discountType?, discountValue? }
-SavedBill { id, timestamp, name, payerId, roundingMethod, members, items, receipts, total }
+Member         { id, name, bank?, promptPayId? }
+MemberQuantity { memberId: string, quantity: number }
+Item           { id, name, price, quantity, assignedMemberIds[], memberQuantities?: MemberQuantity[], receiptId }
+Receipt        { id, name, scRate, vatRate, discountType?, discountValue? }
+SavedBill      { id, timestamp, name, payerId, roundingMethod, members, items, receipts, total }
 ```
 
 **ไม่มี** `isPayer`, `paidBy`, `BillConfig`, `fixedDeductions` — ถูกลบออกในการ redesign
+
+### memberQuantities (optional)
+ใช้เมื่อหารไม่เท่ากัน เช่น เบียร์ 9 แก้ว คนหนึ่ง 5 อีกคน 4
+- ถ้ามี `memberQuantities` → คำนวณตาม quantity ต่อคน
+- ถ้าไม่มี → หารเท่ากันจาก `assignedMemberIds` (backward compatible)
 
 ## Calculation Logic
 
 `utils/calculations.ts` ใช้ **scale factor approach**:
 1. คำนวณ `subtotal` ต่อ receipt (sum price × qty)
 2. คำนวณ `scaleFactor = (subtotal_after_discount + SC + VAT) / subtotal`
-3. `itemTotal = price × qty × scaleFactor`
-4. หาร `itemTotal` เท่ากันใน `assignedMemberIds`
+3. ถ้ามี `memberQuantities` → `share = price × qty_per_member × scaleFactor`
+4. ถ้าไม่มี → `itemTotal = price × qty × scaleFactor` หารเท่าใน `assignedMemberIds`
 5. `payerId` จ่าย `grandTotal` ทั้งหมด — คนอื่น transfer คืน
+
+`getEffectiveAssignees(item)` — helper ใน calculations.ts คืน assignee list รวม qty
+
+## ItemsTab — Edit Mode UX
+
+กด ✏️ บน item card:
+1. **Toggle chips** — เลือกสมาชิก + ปุ่ม "ทุกคน" (หารเท่ากัน)
+2. **"แบ่งจำนวนต่างกัน ▼"** — แสดงเฉพาะ item ที่ qty > 1, กด expand
+   - stepper +/− ต่อคน, กระจาย qty เท่ากันให้อัตโนมัติตอนเปิด
+   - "รวม N/N ✓" สีเขียวเมื่อครบ
+3. กด ✓ บันทึก / ✗ ยกเลิก
+4. ข้อความ warning ⚠️ กดได้เลยเพื่อเปิด edit mode
+
+## SummaryTab — Layout
+
+- **Grand total card** — gradient indigo→violet + avatar ผู้จ่าย
+- **Per-person cards** — กดเพื่อ expand รายการ
+  - Avatar วงกลม auto-color จากชื่อ (hash → 10 สี) ใช้ initials
+  - Progress bar แสดง % ของแต่ละคน
+  - Expand → itemized list พร้อมยอดรวม (SC/VAT รวมแล้ว)
+- **Transfer cards** — avatar ทั้งสองฝั่ง, กล่องยอดกลาง, copy บัญชี, mark paid
+
+## ScanReviewSheet — File Input
+
+ใช้ `<label htmlFor="scan-file-input">` แทน `div onClick` เพื่อให้ทำงานบน iOS Safari
+(programmatic `.click()` บน hidden file input ถูก block บน iOS)
 
 ## Deploy (EasyPanel)
 
@@ -101,6 +133,8 @@ Unit tests อยู่ใน `utils/calculations.test.ts` (7 tests) — คร�
 - Transfer calculation
 - Item ที่ไม่มี assignee
 
+**หมายเหตุ:** tests ยังไม่ครอบคลุม `memberQuantities` — ควรเพิ่มถ้ามีเวลา
+
 ## Conventions
 
 - ภาษาไทยใน UI ทั้งหมด
@@ -108,3 +142,4 @@ Unit tests อยู่ใน `utils/calculations.test.ts` (7 tests) — คร�
 - Component ใหม่ใน `components/tabs/` ถ้าเป็น tab content
 - ไม่มี `BillConfig` — SC/VAT อยู่ที่ Receipt level
 - `formatCurrency(amount)` → `"1,234.50"` (en-US, ไม่มีสัญลักษณ์ ฿)
+- file input ใช้ `<label htmlFor>` เสมอ ไม่ใช้ programmatic `.click()`
