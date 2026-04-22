@@ -1,11 +1,17 @@
 import React, { useState } from 'react'
-import { Trash2, AlertTriangle, Camera, PenLine, Pencil, Check, X } from 'lucide-react'
+import { Trash2, AlertTriangle, Camera, PenLine, Pencil, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Item, Member, Receipt, MemberQuantity } from '../../types'
 import { formatCurrency } from '../../utils/calculations'
 import { AddItemForm } from './AddItemForm'
 import { ScanReviewSheet, ScannedItem } from './ScanReviewSheet'
 
 type AddMode = null | 'manual' | 'scan'
+
+interface EditState {
+  selected: Set<string>       // ใครเลือก (หารเท่ากัน)
+  showCustom: boolean         // เปิด stepper หรือเปล่า
+  qtys: Map<string, number>   // จำนวนต่อคน (custom mode)
+}
 
 interface ItemsTabProps {
   items: Item[]
@@ -26,9 +32,10 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
 }) => {
   const [addMode, setAddMode] = useState<AddMode>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editQtys, setEditQtys] = useState<MemberQuantity[]>([])
+  const [edit, setEdit] = useState<EditState>({ selected: new Set(), showCustom: false, qtys: new Map() })
 
   const grandTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
   const isUnassigned = (item: Item) => {
     if (item.memberQuantities && item.memberQuantities.length > 0)
       return item.memberQuantities.every(mq => mq.quantity === 0)
@@ -39,42 +46,85 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
   const getReceiptName = (receiptId: string) =>
     receipts.find(r => r.id === receiptId)?.name ?? 'ไม่ระบุร้าน'
 
+  // เปิด edit mode
   const startEdit = (item: Item) => {
     setEditingId(item.id)
-    if (item.memberQuantities && item.memberQuantities.length > 0) {
-      // เติม member ที่ขาดให้ครบ
-      const existing = new Map(item.memberQuantities.map(mq => [mq.memberId, mq.quantity]))
-      setEditQtys(members.map(m => ({ memberId: m.id, quantity: existing.get(m.id) ?? 0 })))
+    if (item.memberQuantities && item.memberQuantities.some(mq => mq.quantity > 0)) {
+      const selected = new Set(item.memberQuantities.filter(mq => mq.quantity > 0).map(mq => mq.memberId))
+      const qtys = new Map(item.memberQuantities.map(mq => [mq.memberId, mq.quantity]))
+      setEdit({ selected, showCustom: true, qtys })
     } else {
-      // แปลง assignedMemberIds เป็น quantity (นับจำนวนซ้ำ)
-      const counts = new Map<string, number>()
-      item.assignedMemberIds.forEach(id => counts.set(id, (counts.get(id) ?? 0) + 1))
-      const equalQty = item.assignedMemberIds.length > 0 ? 1 : 0
-      setEditQtys(members.map(m => ({ memberId: m.id, quantity: counts.has(m.id) ? equalQty : 0 })))
+      setEdit({ selected: new Set(item.assignedMemberIds), showCustom: false, qtys: new Map() })
     }
   }
 
-  const adjustQty = (memberId: string, delta: number) => {
-    setEditQtys(prev => prev.map(mq =>
-      mq.memberId === memberId ? { ...mq, quantity: Math.max(0, mq.quantity + delta) } : mq
-    ))
+  // toggle สมาชิก (equal mode)
+  const toggleMember = (memberId: string) => {
+    setEdit(prev => {
+      const selected = new Set(prev.selected)
+      selected.has(memberId) ? selected.delete(memberId) : selected.add(memberId)
+      // sync qtys ถ้า custom เปิดอยู่
+      const qtys = new Map(prev.qtys)
+      if (!selected.has(memberId)) qtys.set(memberId, 0)
+      else if ((qtys.get(memberId) ?? 0) === 0) qtys.set(memberId, 1)
+      return { ...prev, selected, qtys }
+    })
   }
 
+  const selectAll = () => {
+    setEdit(prev => {
+      const selected = new Set(members.map(m => m.id))
+      const qtys = new Map(prev.qtys)
+      members.forEach(m => { if ((qtys.get(m.id) ?? 0) === 0) qtys.set(m.id, 1) })
+      return { ...prev, selected, qtys }
+    })
+  }
+
+  // เปิด/ปิด custom stepper
+  const toggleCustom = (item: Item) => {
+    setEdit(prev => {
+      if (prev.showCustom) return { ...prev, showCustom: false }
+      // เปิด: กระจาย qty เท่ากันในกลุ่มที่เลือก
+      const selectedArr = Array.from(prev.selected)
+      const qtys = new Map(prev.qtys)
+      if (selectedArr.length > 0) {
+        const base = Math.floor(item.quantity / selectedArr.length)
+        const rem = item.quantity % selectedArr.length
+        selectedArr.forEach((id, i) => qtys.set(id, base + (i < rem ? 1 : 0)))
+      }
+      return { ...prev, showCustom: true, qtys }
+    })
+  }
+
+  // ปรับ qty ต่อคน
+  const adjustQty = (memberId: string, delta: number) => {
+    setEdit(prev => {
+      const qtys = new Map(prev.qtys)
+      const next = Math.max(0, (qtys.get(memberId) ?? 0) + delta)
+      qtys.set(memberId, next)
+      // sync selected
+      const selected = new Set(prev.selected)
+      next > 0 ? selected.add(memberId) : selected.delete(memberId)
+      return { ...prev, qtys, selected }
+    })
+  }
+
+  // บันทึก
   const confirmEdit = (item: Item) => {
-    const active = editQtys.filter(mq => mq.quantity > 0)
-    const totalAssigned = active.reduce((s, mq) => s + mq.quantity, 0)
-    const isUnequal = active.length > 0 && totalAssigned !== item.quantity * active.length / active.length
-    // ถ้าทุกคนมี qty=1 หรือเท่ากันหมด → ใช้ assignedMemberIds แบบเดิม (backward compat)
-    const allSame = active.every(mq => mq.quantity === active[0].quantity)
-    if (allSame && active.length > 0) {
+    const { selected, showCustom, qtys } = edit
+    if (showCustom) {
+      const active: MemberQuantity[] = Array.from(selected)
+        .map(id => ({ memberId: id, quantity: qtys.get(id) ?? 0 }))
+        .filter(mq => mq.quantity > 0)
+      const allSame = active.length > 0 && active.every(mq => mq.quantity === active[0].quantity)
       onUpdateItem(item.id, {
         assignedMemberIds: active.map(mq => mq.memberId),
-        memberQuantities: undefined,
+        memberQuantities: allSame ? undefined : active,
       })
     } else {
       onUpdateItem(item.id, {
-        assignedMemberIds: active.map(mq => mq.memberId),
-        memberQuantities: active,
+        assignedMemberIds: Array.from(selected),
+        memberQuantities: undefined,
       })
     }
     setEditingId(null)
@@ -100,37 +150,22 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
         </div>
       )}
 
-      {/* Add forms */}
       {addMode === 'manual' && (
-        <AddItemForm
-          members={members}
-          receipts={receipts}
-          onAdd={onAddItem}
-          onClose={() => setAddMode(null)}
-        />
+        <AddItemForm members={members} receipts={receipts} onAdd={onAddItem} onClose={() => setAddMode(null)} />
       )}
       {addMode === 'scan' && (
         <ScanReviewSheet
-          members={members}
-          receipts={receipts}
-          defaultReceiptId={receipts[0]?.id ?? ''}
-          onConfirm={(items, receiptId) => {
-            onAddScannedItems(items, receiptId)
-            setAddMode(null)
-          }}
-          onCancel={() => setAddMode(null)}
-          onScanFiles={onScanFiles}
-          isScanning={isScanning}
+          members={members} receipts={receipts} defaultReceiptId={receipts[0]?.id ?? ''}
+          onConfirm={(items, receiptId) => { onAddScannedItems(items, receiptId); setAddMode(null) }}
+          onCancel={() => setAddMode(null)} onScanFiles={onScanFiles} isScanning={isScanning}
         />
       )}
 
-      {/* Warning: unassigned items */}
+      {/* Warning banner */}
       {unassigned.length > 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3 mb-4 flex items-center gap-2">
           <AlertTriangle size={16} className="text-amber-500 flex-shrink-0" />
-          <p className="text-xs text-amber-700 dark:text-amber-300">
-            มี {unassigned.length} รายการที่ยังไม่ได้เลือกว่าใครกิน
-          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300">มี {unassigned.length} รายการที่ยังไม่ได้เลือกว่าใครกิน</p>
         </div>
       )}
 
@@ -149,16 +184,20 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
             {items.map(item => {
               const hasNoAssignee = isUnassigned(item)
               const isEditing = editingId === item.id
-              const editTotal = editQtys.reduce((s, mq) => s + mq.quantity, 0)
+              const customTotal = Array.from(edit.qtys.values()).reduce((s, q) => s + q, 0)
+
               return (
                 <div
                   key={item.id}
-                  className={`border rounded-xl p-3 ${
-                    hasNoAssignee
+                  className={`border rounded-xl p-3 transition-all ${
+                    isEditing
+                      ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30'
+                      : hasNoAssignee
                       ? 'border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-700'
                       : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-900'
                   }`}
                 >
+                  {/* Row: name + price + actions */}
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-semibold text-sm dark:text-white">
@@ -174,8 +213,8 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                       </span>
                       {isEditing ? (
                         <>
-                          <button onClick={() => confirmEdit(item)} className="text-green-500 hover:text-green-600 transition-colors"><Check size={15} /></button>
-                          <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={15} /></button>
+                          <button onClick={() => confirmEdit(item)} className="text-green-500 active:scale-90 transition-all"><Check size={16} /></button>
+                          <button onClick={() => setEditingId(null)} className="text-gray-400 active:scale-90 transition-all"><X size={16} /></button>
                         </>
                       ) : (
                         <>
@@ -185,57 +224,97 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {/* Edit mode */}
                   {isEditing ? (
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-gray-500 dark:text-slate-400">แบ่งจำนวนต่อคน</p>
-                        <span className={`text-xs font-semibold ${editTotal === item.quantity ? 'text-green-500' : 'text-amber-500'}`}>
-                          รวม {editTotal}/{item.quantity}
-                        </span>
+                    <div className="mt-1">
+                      {/* Member toggles */}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <button
+                          onClick={selectAll}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all active:scale-95 ${
+                            edit.selected.size === members.length
+                              ? 'bg-indigo-500 border-indigo-500 text-white'
+                              : 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-400'
+                          }`}
+                        >
+                          ทุกคน
+                        </button>
+                        {members.map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => toggleMember(m.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all active:scale-95 ${
+                              edit.selected.has(m.id)
+                                ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-600 text-gray-400 dark:text-slate-500'
+                            }`}
+                          >
+                            {edit.selected.has(m.id) ? '✓ ' : ''}{m.name}
+                          </button>
+                        ))}
                       </div>
-                      <div className="space-y-2">
-                        {editQtys.map(mq => {
-                          const member = members.find(m => m.id === mq.memberId)
-                          if (!member) return null
-                          const share = mq.quantity > 0 ? item.price * mq.quantity : 0
-                          return (
-                            <div key={mq.memberId} className="flex items-center gap-2">
-                              <span className={`text-xs font-semibold w-14 truncate ${mq.quantity > 0 ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400 dark:text-slate-500'}`}>
-                                {member.name}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => adjustQty(mq.memberId, -1)}
-                                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 font-bold text-base flex items-center justify-center active:scale-90 transition-all"
-                                >−</button>
-                                <span className={`w-6 text-center text-sm font-bold ${mq.quantity > 0 ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-300 dark:text-slate-600'}`}>
-                                  {mq.quantity}
+
+                      {/* Toggle custom split */}
+                      {item.quantity > 1 && edit.selected.size > 0 && (
+                        <button
+                          onClick={() => toggleCustom(item)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-indigo-500 dark:text-indigo-400 mb-2 active:opacity-70 transition-opacity"
+                        >
+                          {edit.showCustom ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          แบ่งจำนวนต่างกัน
+                        </button>
+                      )}
+
+                      {/* Custom steppers */}
+                      {edit.showCustom && (
+                        <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900 rounded-xl p-3 space-y-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-xs text-gray-400 dark:text-slate-500">จำนวนต่อคน</p>
+                            <span className={`text-xs font-bold ${customTotal === item.quantity ? 'text-green-500' : 'text-amber-500'}`}>
+                              รวม {customTotal}/{item.quantity} {customTotal === item.quantity ? '✓' : ''}
+                            </span>
+                          </div>
+                          {members.map(m => {
+                            const qty = edit.qtys.get(m.id) ?? 0
+                            const isActive = qty > 0
+                            return (
+                              <div key={m.id} className="flex items-center gap-2">
+                                <span className={`text-xs font-semibold flex-1 truncate ${isActive ? 'text-gray-800 dark:text-white' : 'text-gray-300 dark:text-slate-600'}`}>
+                                  {m.name}
                                 </span>
-                                <button
-                                  onClick={() => adjustQty(mq.memberId, 1)}
-                                  className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold text-base flex items-center justify-center active:scale-90 transition-all"
-                                >+</button>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => adjustQty(m.id, -1)}
+                                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 font-bold flex items-center justify-center active:scale-90 transition-all text-base"
+                                  >−</button>
+                                  <span className={`w-5 text-center text-sm font-bold ${isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-300 dark:text-slate-600'}`}>
+                                    {qty}
+                                  </span>
+                                  <button
+                                    onClick={() => adjustQty(m.id, 1)}
+                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center active:scale-90 transition-all text-base"
+                                  >+</button>
+                                </div>
+                                <span className={`text-xs w-16 text-right tabular-nums ${isActive ? 'text-gray-500 dark:text-slate-400' : 'text-gray-200 dark:text-slate-700'}`}>
+                                  {isActive ? `${formatCurrency(item.price * qty)}฿` : '—'}
+                                </span>
                               </div>
-                              {mq.quantity > 0 && (
-                                <span className="text-xs text-gray-400 dark:text-slate-500 ml-auto">
-                                  {formatCurrency(share)}฿
-                                </span>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   ) : hasNoAssignee ? (
                     <button
                       onClick={() => startEdit(item)}
-                      className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg px-2 py-1 w-full text-left"
+                      className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg px-2 py-1.5 w-full text-left active:opacity-70 transition-opacity"
                     >
                       ⚠️ ยังไม่ได้เลือกว่าใครกิน — แตะเพื่อแก้ไข
                     </button>
                   ) : (
                     <div className="flex flex-wrap gap-1">
-                      {(item.memberQuantities && item.memberQuantities.some(mq => mq.quantity > 0)
+                      {item.memberQuantities && item.memberQuantities.some(mq => mq.quantity > 0)
                         ? item.memberQuantities.filter(mq => mq.quantity > 0).map(mq => {
                             const m = members.find(m => m.id === mq.memberId)
                             return m ? (
@@ -252,7 +331,7 @@ export const ItemsTab: React.FC<ItemsTabProps> = ({
                               </span>
                             ) : null
                           })
-                      )}
+                      }
                     </div>
                   )}
                 </div>
